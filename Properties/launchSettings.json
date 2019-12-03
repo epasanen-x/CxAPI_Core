@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "CxAPI_Core": {
+      "commandName": "Project",
+      "commandLineArgs": "--store_credentials --user_name=erniep@adiron-tech.com --password=Cx123456& --debug"
+    }
+  }
+}
