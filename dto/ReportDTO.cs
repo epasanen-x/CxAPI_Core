@@ -109,14 +109,23 @@ namespace CxAPI_Core.dto
         public string teamName { get; set; }
         public string presetName { get; set; }
         public long similarityId { get; set; }
-        public DateTime scanDate { get; set; }
+        public long resultId { get; set; }
+        public long reportId { get; set; }
+        public long pathId { get; set; }
+        public long nodeId { get; set; }
         public long projectId { get; set; }
+        public long queryId { get; set; }
         public long scanId { get; set; }
         public int state { get; set; }
         public string status { get; set; }
         public string Severity { get; set; }
         public string Group { get; set; }
         public string Query { get; set; }
+        public int lineNo { get; set; }
+        public int column { get; set; }
+        public string firstLine { get; set; }
+        public string fileName { get; set; }
+        public DateTime scanDate { get; set; }
     }
     public partial class ReportOutput
     {
