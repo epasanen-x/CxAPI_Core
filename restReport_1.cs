@@ -27,19 +27,24 @@ namespace CxAPI_Core
             bool waitFlag = false;
             getScanResults scanResults = new getScanResults();
             getScans scans = new getScans();
+            List<Teams> teams = scans.getTeams(token);
             List<ScanObject> scan = scans.getScan(token);
             foreach (ScanObject s in scan)
             {
                 if ((s.DateAndTime != null) && (s.Status.Id == 7) && (s.DateAndTime.StartedOn > token.start_time) && (s.DateAndTime.StartedOn < token.end_time))
                 {
-                    setCount(s.Project.Id, scanCount);
-                    findFirstorLastScan(s.Project.Id, s, start, true);
-                    findFirstorLastScan(s.Project.Id, s, end, false);
-
-                    ReportResult result = scanResults.SetResultRequest(s.Id, "XML", token);
-                    if (result != null)
+                    if (matchProjectandTeam(s, teams))
                     {
-                        trace.Add(new ReportTrace(s.Project.Id, s.Project.Name, s.DateAndTime.StartedOn, s.Id, result.ReportId,"XML"));
+                        setCount(s.Project.Id, scanCount);
+                        findFirstorLastScan(s.Project.Id, s, start, true);
+                        findFirstorLastScan(s.Project.Id, s, end, false);
+
+
+                        ReportResult result = scanResults.SetResultRequest(s.Id, "XML", token);
+                        if (result != null)
+                        {
+                            trace.Add(new ReportTrace(s.Project.Id, s.Project.Name, s.DateAndTime.StartedOn, s.Id, result.ReportId, "XML"));
+                        }
                     }
                 }
             }
@@ -281,6 +286,22 @@ namespace CxAPI_Core
                 });
             }
             return true;
+        }
+        public bool matchProjectandTeam(ScanObject s, List<Teams> teams)
+        {
+            bool result = false;
+            getScans scans = new getScans();
+
+            string fullName = scans.getFullName(teams, s.OwningTeamId);
+
+            if ((String.IsNullOrEmpty(token.project_name) || ((!String.IsNullOrEmpty(token.project_name)) && (s.Project.Name.Contains(token.project_name)))))
+            {
+                if ((String.IsNullOrEmpty(token.team_name) || ((!String.IsNullOrEmpty(token.team_name)) && (!String.IsNullOrEmpty(fullName)) && (fullName.Contains(token.team_name)))))
+                {
+                    result = true;
+                }
+            }
+            return result;
         }
 
         public void Dispose()

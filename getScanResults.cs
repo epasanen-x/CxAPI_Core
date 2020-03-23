@@ -15,13 +15,14 @@ namespace CxAPI_Core
     {
         public XElement GetResult(long report_id, resultClass token)
         {
+            string path = String.Empty;
             try
             {
                 get httpGet = new get();
 
                 secure token_secure = new secure(token);
                 token_secure.findToken(token);
-                string path = token_secure.get_rest_Uri(String.Format(CxConstant.CxReportFetch, report_id));
+                path = token_secure.get_rest_Uri(String.Format(CxConstant.CxReportFetch, report_id));
                 httpGet.get_Http(token, path);
                 if (token.status == 0)
                 {
@@ -34,18 +35,23 @@ namespace CxAPI_Core
             {
                 token.status = -1;
                 token.statusMessage = ex.Message;
+                if (token.debug && token.verbosity > 0)
+                {
+                    Console.Error.WriteLine("GetResult: {0}, Message: {1} Trace: {3}", path, ex.Message, ex.StackTrace);
+                }
             }
             return null;
         }
         public byte[] GetGenaricResult(long report_id, resultClass token)
         {
+            string path = String.Empty;
             try
             {
                 get httpGet = new get();
 
                 secure token_secure = new secure(token);
                 token_secure.findToken(token);
-                string path = token_secure.get_rest_Uri(String.Format(CxConstant.CxReportFetch, report_id));
+                path = token_secure.get_rest_Uri(String.Format(CxConstant.CxReportFetch, report_id));
                 httpGet.get_Http(token, path);
                 if (token.status == 0)
                 {
@@ -56,18 +62,24 @@ namespace CxAPI_Core
             {
                 token.status = -1;
                 token.statusMessage = ex.Message;
+                if (token.debug && token.verbosity > 0)
+                {
+                    Console.Error.WriteLine("GetGenaricResult: {0}, Message: {1} Trace: {3}", path, ex.Message, ex.StackTrace);
+                }
+
             }
             return null;
         }
 
         public bool GetResultStatus(long report_id, resultClass token)
         {
+            string path = String.Empty;
             try
             {
                 get httpGet = new get();
                 secure token_secure = new secure(token);
                 token_secure.findToken(token);
-                string path = token_secure.get_rest_Uri(String.Format(CxConstant.CxReportStatus, report_id));
+                path = token_secure.get_rest_Uri(String.Format(CxConstant.CxReportStatus, report_id));
                 httpGet.get_Http(token, path);
                 if (token.status == 0)
                 {
@@ -82,11 +94,16 @@ namespace CxAPI_Core
             {
                 token.status = -1;
                 token.statusMessage = ex.Message;
+                if (token.debug && token.verbosity > 0)
+                {
+                    Console.Error.WriteLine("GetResultStatus: {0}, Message: {1} Trace: {3}", path, ex.Message, ex.StackTrace);
+                }
             }
             return false;
         }
         public ReportResult SetResultRequest(long scan_id,string report_type, resultClass token)
         {
+            string path = String.Empty;
             try
             {
                 ReportRequest request = new ReportRequest()
@@ -98,7 +115,7 @@ namespace CxAPI_Core
                 post Post = new post();
                 secure token_secure = new secure(token);
                 token_secure.findToken(token);
-                string path = token_secure.post_rest_Uri(CxConstant.CxReportRegister);
+                path = token_secure.post_rest_Uri(CxConstant.CxReportRegister);
                 Post.post_Http(token, path, request);
                 if (token.status == 0)
                 {
@@ -110,6 +127,11 @@ namespace CxAPI_Core
             {
                 token.status = -1;
                 token.statusMessage = ex.Message;
+                if (token.debug && token.verbosity > 0)
+                {
+                    Console.Error.WriteLine("SetResultRequest: {0}, Message: {1} Trace: {3}", path, ex.Message, ex.StackTrace);
+                }
+
             }
             return null;
         }

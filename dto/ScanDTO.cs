@@ -6,6 +6,11 @@ using System.Globalization;
 namespace CxAPI_Core.dto
 {
 
+    public partial class Teams
+    {
+        public Guid id { get; set; }
+        public string fullName { get; set; }
+    }
 
     public partial class ScanObject
     {

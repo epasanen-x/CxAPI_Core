@@ -31,11 +31,12 @@ namespace CxAPI_Core
             getScanResults scanResults = new getScanResults();
             getScans scans = new getScans();
             List<ScanObject> scan = scans.getScan(token);
+            List<Teams> teams = scans.getTeams(token);
             foreach (ScanObject s in scan)
             {
                 if ((s.DateAndTime != null) && (s.Status.Id == 7) && (s.DateAndTime.StartedOn > token.start_time) && (s.DateAndTime.StartedOn < token.end_time))
                 {
-                    if ((String.IsNullOrEmpty(token.project_name) || ((!String.IsNullOrEmpty(token.project_name)) && (s.Project.Name.Contains(token.project_name)))))
+                    if (matchProjectandTeam(s, teams))
                     {
                         setCount(s.Project.Id, scanCount);
                         findFirstandLastScan(s.Project.Id, s, start, end);
@@ -371,6 +372,22 @@ namespace CxAPI_Core
                 Console.Error.WriteLine(ex.Message);
                 throw ex;
             }
+        }
+        public bool matchProjectandTeam(ScanObject s, List<Teams> teams)
+        {
+            bool result = false;
+            getScans scans = new getScans();
+
+            string fullName = scans.getFullName(teams, s.OwningTeamId);
+
+            if ((String.IsNullOrEmpty(token.project_name) || ((!String.IsNullOrEmpty(token.project_name)) && (s.Project.Name.Contains(token.project_name)))))
+            {
+                if ((String.IsNullOrEmpty(token.team_name) || ((!String.IsNullOrEmpty(token.team_name)) && (!String.IsNullOrEmpty(fullName)) && (fullName.Contains(token.team_name)))))
+                {
+                    result = true;
+                }
+            }
+            return result;
         }
 
         public void Dispose()

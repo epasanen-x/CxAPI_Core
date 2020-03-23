@@ -26,16 +26,15 @@ namespace CxAPI_Core
             //            Dictionary<long, ReportStaging> start = new Dictionary<long, ReportStaging>();
             //            Dictionary<long, ReportStaging> end = new Dictionary<long, ReportStaging>();
             Dictionary<long, ScanCount> scanCount = new Dictionary<long, ScanCount>();
-            ConsoleSpinner spinner = new ConsoleSpinner();
-            bool waitFlag = false;
             getScanResults scanResults = new getScanResults();
             getScans scans = new getScans();
             List<ScanObject> scan = scans.getScan(token);
+            List<Teams> teams = scans.getTeams(token);
             foreach (ScanObject s in scan)
             {
                 if ((s.DateAndTime != null) && (s.Status.Id == 7) && (s.DateAndTime.StartedOn > token.start_time) && (s.DateAndTime.StartedOn < token.end_time))
                 {
-                    if ((String.IsNullOrEmpty(token.project_name) || ((!String.IsNullOrEmpty(token.project_name)) && (s.Project.Name.Contains(token.project_name)))))
+                    if (matchProjectandTeam(s,teams))
                     {
                         setCount(s.Project.Id, scanCount);
 
@@ -43,38 +42,19 @@ namespace CxAPI_Core
                         if (result != null)
                         {
                             trace.Add(new ReportTrace(s.Project.Id, s.Project.Name, s.DateAndTime.StartedOn, s.Id, result.ReportId, "XML"));
+                            if (trace.Count % 10 == 0)
+                            {
+                                fetchReports(trace, scanResults, fix, resultAll, report_output);
+                                trace.Clear();
+                            }
                         }
 
                     }
                 }
             }
-            while (!waitFlag)
-            {
-                spinner.Turn();
-                waitFlag = true;
-                if (token.debug && token.verbosity > 0) { Console.WriteLine("Sleeping 1 second(s)"); }
-                Thread.Sleep(1000);
-                foreach (ReportTrace rt in trace)
-                {
-                    if (!rt.isRead)
-                    {
-                        waitFlag = false;
-                        if (token.debug && token.verbosity > 0) { Console.WriteLine("Testing report.Id {0}", rt.reportId); }
-                        if (scanResults.GetResultStatus(rt.reportId, token))
-                        {
-                            if (token.debug && token.verbosity > 0) { Console.WriteLine("Found report.Id {0}", rt.reportId); }
-                            var result = scanResults.GetResult(rt.reportId, token);
-                            if (result != null)
-                            {
-                                if (process_CxResponse(rt.reportId, result, resultAll, fix, report_output))
-                                {
-                                    rt.isRead = true;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+            fetchReports(trace, scanResults, fix, resultAll, report_output);
+            trace.Clear();
+
             addFixed(fix, report_output);
             if (token.pipe)
             {
@@ -302,8 +282,10 @@ namespace CxAPI_Core
             }
             catch (Exception ex)
             {
+                Console.Error.WriteLine("Failure reading report ID: {0}", report_id);
                 Console.Error.WriteLine(ex.Message);
-                return false;
+                Console.Error.WriteLine(ex.StackTrace);
+                return true;
             }
 
         }
@@ -337,6 +319,60 @@ namespace CxAPI_Core
                 }
             }
             return true;
+        }
+
+        private bool fetchReports(List<ReportTrace> trace,getScanResults scanResults, Dictionary<long, Dictionary<DateTime, Dictionary<string, ReportResultExtended>>> fix, Dictionary<string, ReportResultExtended> resultAll,List<ReportResultExtended> report_output)
+        {
+            bool waitFlag = false;
+            ConsoleSpinner spinner = new ConsoleSpinner();
+            while (!waitFlag)
+            {
+                spinner.Turn();
+                waitFlag = true;
+                if (token.debug && token.verbosity > 0) { Console.WriteLine("Sleeping 1 second(s)"); }
+                Thread.Sleep(1000);
+                foreach (ReportTrace rt in trace)
+                {
+                    if (!rt.isRead)
+                    {
+                        waitFlag = false;
+                        if (token.debug && token.verbosity > 0) { Console.WriteLine("Testing report.Id {0}", rt.reportId); }
+                        if (scanResults.GetResultStatus(rt.reportId, token))
+                        {
+                            if (token.debug && token.verbosity > 0) { Console.WriteLine("Found report.Id {0}", rt.reportId); }
+                            var result = scanResults.GetResult(rt.reportId, token);
+                            if (result != null)
+                            {
+                                if (process_CxResponse(rt.reportId, result, resultAll, fix, report_output))
+                                {
+                                    rt.isRead = true;
+                                }
+                                else
+                                {
+                                    return false;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            return true;
+        }
+        public bool matchProjectandTeam(ScanObject s, List<Teams> teams)
+        {
+            bool result = false;
+            getScans scans = new getScans();
+
+            string fullName = scans.getFullName(teams, s.OwningTeamId);
+
+            if ((String.IsNullOrEmpty(token.project_name) || ((!String.IsNullOrEmpty(token.project_name)) && (s.Project.Name.Contains(token.project_name)))))
+            {
+                if ((String.IsNullOrEmpty(token.team_name) || ((!String.IsNullOrEmpty(token.team_name)) && (!String.IsNullOrEmpty(fullName)) && (fullName.Contains(token.team_name)))))
+                {
+                    result = true;
+                }
+            }
+            return result;
         }
         public void Dispose()
         {

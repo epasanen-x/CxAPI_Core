@@ -59,6 +59,8 @@ namespace CxAPI_Core
                   v => token.report_name= v },
                 { "pn|project_name=", "Filter with project name, Will return project if any portion of the project name is a match",
                   v => token.project_name = v },
+                { "tn|team_name=", "Filter with team name, Will return a team if any portion of the team name is a match",
+                  v => token.team_name = v },
                 { "pi|pipe", "Do not write to file but pipe output to stdout. Useful when using other API's",
                   v => token.pipe = true },
                 { "path|file_path=", "Override file path in configuration",

@@ -10,6 +10,7 @@ namespace CxAPI_Core
         public const string CxAllProjects = "/cxrestapi/projects";
         public const string CxProject = "/cxrestapi/projects/{0}";
         public const string CxScans = "/cxrestapi/sast/scans";
+        public const string CxTeams = "/cxrestapi/auth/teams";
         public const string CxReportRegister = "/cxrestapi/reports/sastScan";
         public const string CxReportFetch = "/cxrestapi/reports/sastScan/{0}";
         public const string CxReportStatus = "/cxrestapi/reports/sastScan/{0}/status";

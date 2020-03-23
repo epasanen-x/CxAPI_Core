@@ -43,6 +43,7 @@ namespace CxAPI_Core
         public DateTime? end_time { get; set; }
         public string session_id { get; set; }
         public string project_name { get; set; }
+        public string team_name { get; set; }
         public bool pipe { get; set; }
         public string os_path { get; set; }
         public bool debug { get; set; }
