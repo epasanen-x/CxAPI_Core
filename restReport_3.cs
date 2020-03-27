@@ -41,8 +41,8 @@ namespace CxAPI_Core
                         ReportResult result = scanResults.SetResultRequest(s.Id, "XML", token);
                         if (result != null)
                         {
-                            trace.Add(new ReportTrace(s.Project.Id, s.Project.Name, s.DateAndTime.StartedOn, s.Id, result.ReportId, "XML"));
-                            if (trace.Count % 10 == 0)
+                            trace.Add(new ReportTrace(s.Project.Id, s.Project.Name, scans.getFullName(teams, s.OwningTeamId), s.DateAndTime.StartedOn, s.Id, result.ReportId, "XML"));
+                            if (trace.Count % 5 == 0)
                             {
                                 fetchReports(trace, scanResults, fix, resultAll, report_output);
                                 trace.Clear();

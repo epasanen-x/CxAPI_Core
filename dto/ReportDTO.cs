@@ -37,15 +37,17 @@ namespace CxAPI_Core.dto
         public long reportId { get; set; }
         public string reportType {get; set;}
         public string projectName { get; set; }
+        public string teamName { get; set; }
         public DateTimeOffset? scanTime { get; set; }
         public bool isRead { get; set; }
 
-        public ReportTrace(long projectId, string projectName, DateTimeOffset? scanTime, long pScanId, long preportId, string reportType)
+        public ReportTrace(long projectId, string projectName, string teamName, DateTimeOffset? scanTime, long pScanId, long preportId, string reportType)
         {
             this.projectId = projectId;
             this.scanId = pScanId;
             this.reportId = preportId;
             this.projectName = projectName;
+            this.teamName = teamName;
             this.scanTime = scanTime;
             this.reportType = reportType;
             this.isRead = false;
@@ -130,6 +132,9 @@ namespace CxAPI_Core.dto
     public partial class ReportOutput
     {
         public string ProjectName { get; set; }
+       // public string TeamName { get; set; }
+        public string company { get; set; }
+        public string team { get; set; }
         public int StartHigh { get; set; }
         public int StartMedium { get; set; }
         public int StartLow { get; set; }

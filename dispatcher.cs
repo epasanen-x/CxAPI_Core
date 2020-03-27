@@ -11,6 +11,7 @@ namespace CxAPI_Core
         public resultClass dispatch()
         {
             resultClass token = Configuration.mono_command_args();
+            fetchToken newtoken = new fetchToken();
             if (token.status != 0) { return token; }
             secure secure = new secure(token);
             _options.debug = token.debug;
@@ -20,7 +21,7 @@ namespace CxAPI_Core
             {
                 case api_action.getToken:
                     {
-                        fetchToken newtoken = new fetchToken();
+                        
                         newtoken.get_token(secure.decrypt_Credentials());
                         break;
                     }
@@ -32,6 +33,7 @@ namespace CxAPI_Core
                     }
                 case api_action.scanResults:
                     {
+                        token = newtoken.get_token(secure.decrypt_Credentials());
                         if (token.report_name.Contains("REST_REPORT_1"))
                         {
                             using (restReport_1 restReport = new restReport_1(token))

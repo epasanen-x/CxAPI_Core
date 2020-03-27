@@ -26,6 +26,7 @@ namespace CxAPI_Core
             getScanResults scanResults = new getScanResults();
             getScans scans = new getScans();
             List<ScanObject> scan = scans.getScan(token);
+            List<Teams> teams = scans.getTeams(token);
             ConsoleSpinner spinner = new ConsoleSpinner();
         
 
@@ -40,7 +41,7 @@ namespace CxAPI_Core
                             ReportResult result = scanResults.SetResultRequest(s.Id, "XML", token);
                             if (result != null)
                             {
-                                trace.Add(new ReportTrace(s.Project.Id, s.Project.Name, s.DateAndTime.StartedOn, s.Id, result.ReportId, "XML"));
+                                trace.Add(new ReportTrace(s.Project.Id, s.Project.Name, scans.getFullName(teams, s.OwningTeamId) ,s.DateAndTime.StartedOn, s.Id, result.ReportId, "XML"));
                             }
                         }
                         if (token.save_result.Contains("PDF"))
@@ -48,7 +49,7 @@ namespace CxAPI_Core
                             ReportResult result = scanResults.SetResultRequest(s.Id, "PDF", token);
                             if (result != null)
                             {
-                                trace.Add(new ReportTrace(s.Project.Id, s.Project.Name, s.DateAndTime.StartedOn, s.Id, result.ReportId, "PDF"));
+                                trace.Add(new ReportTrace(s.Project.Id, s.Project.Name, scans.getFullName(teams, s.OwningTeamId), s.DateAndTime.StartedOn, s.Id, result.ReportId, "PDF"));
                             }
                         }
                     }

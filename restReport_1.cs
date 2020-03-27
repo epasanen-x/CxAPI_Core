@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Xml.Linq;
 using CxAPI_Core.dto;
 
@@ -19,12 +20,11 @@ namespace CxAPI_Core
         public bool fetchReportsbyDate()
         {
             List<ReportTrace> trace = new List<ReportTrace>();
-            List<ReportResultNew> resultNew = new List<ReportResultNew>();
+            List<ReportResultAll> resultNew = new List<ReportResultAll>();
             Dictionary<long, ReportStaging> start = new Dictionary<long, ReportStaging>();
             Dictionary<long, ReportStaging> end = new Dictionary<long, ReportStaging>();
-            Dictionary<long, List<ReportResultNew>> last = new Dictionary<long, List<ReportResultNew>>();
+            Dictionary<long, List<ReportResultAll>> last = new Dictionary<long, List<ReportResultAll>>();
             Dictionary<long, ScanCount> scanCount = new Dictionary<long, ScanCount>();
-            bool waitFlag = false;
             getScanResults scanResults = new getScanResults();
             getScans scans = new getScans();
             List<Teams> teams = scans.getTeams(token);
@@ -36,48 +36,31 @@ namespace CxAPI_Core
                     if (matchProjectandTeam(s, teams))
                     {
                         setCount(s.Project.Id, scanCount);
-                        findFirstorLastScan(s.Project.Id, s, start, true);
-                        findFirstorLastScan(s.Project.Id, s, end, false);
-
+                        findFirstorLastScan(s.Project.Id,  s, teams ,start, true);
+                        findFirstorLastScan(s.Project.Id, s, teams , end, false);
 
                         ReportResult result = scanResults.SetResultRequest(s.Id, "XML", token);
                         if (result != null)
                         {
-                            trace.Add(new ReportTrace(s.Project.Id, s.Project.Name, s.DateAndTime.StartedOn, s.Id, result.ReportId, "XML"));
+                            trace.Add(new ReportTrace(s.Project.Id, s.Project.Name, scans.getFullName(teams, s.OwningTeamId), s.DateAndTime.StartedOn, s.Id, result.ReportId, "XML"));
                         }
-                    }
-                }
-            }
-            while (!waitFlag)
-            {
-                foreach (ReportTrace rt in trace)
-                {
-                    waitFlag = true;
-                    if (!rt.isRead)
-                    {
-                        waitFlag = false;
-                        if (scanResults.GetResultStatus(rt.reportId, token))
+                        if (trace.Count % 10 == 0)
                         {
-                            var result = scanResults.GetResult(rt.reportId, token);
-                            if (result != null)
-                            {
-                                if (process_CxResponse(result, resultNew))
-                                {
-                                    rt.isRead = true;
-                                    getlastReport(result, end, last);
-                                }
-                            }
+                            waitForResult(trace, scanResults, resultNew, end, last);
+                            trace.Clear();
                         }
                     }
                 }
             }
+            waitForResult(trace, scanResults, resultNew, end, last);
+            trace.Clear();
 
             List<ReportOutput> reportOutputs = totalScansandReports(start, end, resultNew, last, scanCount);
             if (token.pipe)
             {
                 foreach (ReportOutput csv in reportOutputs)
                 {
-                    Console.WriteLine("{0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},{12},{13},{14},{15}", csv.ProjectName, csv.LastHigh, csv.LastMedium, csv.LastLow, csv.NewHigh, csv.NewMedium, csv.NewLow, csv.DiffHigh, csv.DiffMedium, csv.DiffLow, csv.NotExploitable, csv.Confirmed, csv.ToVerify, csv.firstScan, csv.lastScan, csv.ScanCount);
+                    Console.WriteLine("{0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},{12},{13},{14},{15},{16}", csv.ProjectName, csv.company,csv.team, csv.LastHigh, csv.LastMedium, csv.LastLow, csv.NewHigh, csv.NewMedium, csv.NewLow, csv.DiffHigh, csv.DiffMedium, csv.DiffLow, csv.NotExploitable, csv.Confirmed, csv.ToVerify, csv.firstScan, csv.lastScan, csv.ScanCount);
                 }
             }
             else
@@ -88,7 +71,7 @@ namespace CxAPI_Core
             return true;
         }
 
-        private bool getlastReport(XElement result, Dictionary<long, ReportStaging> end, Dictionary<long, List<ReportResultNew>> last)
+        private bool getlastReport(XElement result, Dictionary<long, ReportStaging> end, Dictionary<long, List<ReportResultAll>> last)
         {
             foreach (long key in end.Keys)
             {
@@ -117,17 +100,18 @@ namespace CxAPI_Core
             }
         }
 
-        private List<ReportOutput> totalScansandReports(Dictionary<long, ReportStaging> start, Dictionary<long, ReportStaging> end, List<ReportResultNew> resultNew, Dictionary<long, List<ReportResultNew>> lastScan, Dictionary<long, ScanCount> scanCount)
+        private List<ReportOutput> totalScansandReports(Dictionary<long, ReportStaging> start, Dictionary<long, ReportStaging> end, List<ReportResultAll> resultNew, Dictionary<long, List<ReportResultAll>> lastScan, Dictionary<long, ScanCount> scanCount)
         {
             List<ReportOutput> reports = new List<ReportOutput>();
+            getScans scans = new getScans();
             foreach (long key in start.Keys)
             {
                 ReportOutput report = new ReportOutput();
 
                 ReportStaging first = start[key];
                 ReportStaging last = end[key];
-                List<ReportResultNew> lastScanResults = lastScan[key];
-                foreach (ReportResultNew result in resultNew)
+                List<ReportResultAll> lastScanResults = lastScan[key];
+                foreach (ReportResultAll result in resultNew)
                 {
                     if (result.projectId == first.ProjectId)
                     {
@@ -137,15 +121,21 @@ namespace CxAPI_Core
                             else if (result.Severity == "Medium") { report.NewMedium++; }
                             else if (result.Severity == "Low") { report.NewLow++; }
                         }
-                    }
+                    }    
                 }
-                foreach (ReportResultNew result in lastScanResults)
+                foreach (ReportResultAll result in lastScanResults)
                 {
                     if (result.state == 0) { report.ToVerify++; }
                     else if (result.state == 1) { report.NotExploitable++; }
                     else if (result.state == 2) { report.Confirmed++; }
                 }
-
+                //report.TeamName = first.TeamName;
+                string[] split = first.TeamName.Split('\\');
+                if (split.Length > 1)
+                {
+                    report.company = split[split.Length - 2];
+                    report.team = split[split.Length - 1];
+                }
                 report.ProjectName = first.ProjectName;
                 report.StartHigh = first.High;
                 report.StartMedium = first.Medium;
@@ -167,7 +157,7 @@ namespace CxAPI_Core
             return reports;
         }
 
-        private bool process_CxResponse(XElement result, List<ReportResultNew> response)
+        private bool process_CxResponse(XElement result, List<ReportResultAll> response)
         {
             try
             {
@@ -179,7 +169,7 @@ namespace CxAPI_Core
                 {
                     XElement query = el.Parent;
                     XElement root = query.Parent;
-                    ReportResultNew isnew = new ReportResultNew()
+                    ReportResultAll isnew = new ReportResultAll()
                     {
                         Query = query.Attribute("name").Value.ToString(),
                         Group = query.Attribute("group").Value.ToString(),
@@ -187,7 +177,8 @@ namespace CxAPI_Core
                         scanId = Convert.ToInt64(root.Attribute("ScanId").Value.ToString()),
                         status = el.Attribute("Status").Value.ToString(),
                         Severity = el.Attribute("Severity").Value.ToString(),
-                        state = Convert.ToInt32(el.Attribute("state").Value.ToString())
+                        state = Convert.ToInt32(el.Attribute("state").Value.ToString()),
+                        teamName = root.Attribute("TeamFullPathOnReportDate").Value.ToString()
                     };
                     response.Add(isnew);
 
@@ -201,9 +192,9 @@ namespace CxAPI_Core
             }
 
         }
-        private List<ReportResultNew> process_LastScan(XElement result, long scanId)
+        private List<ReportResultAll> process_LastScan(XElement result, long scanId)
         {
-            List<ReportResultNew> reportResults = new List<ReportResultNew>();
+            List<ReportResultAll> reportResults = new List<ReportResultAll>();
             try
             {
                 if (result.Attribute("ScanId").Value == scanId.ToString())
@@ -214,7 +205,7 @@ namespace CxAPI_Core
                     {
                         XElement query = el.Parent;
                         XElement root = query.Parent;
-                        ReportResultNew isnew = new ReportResultNew()
+                        ReportResultAll isnew = new ReportResultAll()
                         {
                             Query = query.Attribute("name").Value.ToString(),
                             Group = query.Attribute("group").Value.ToString(),
@@ -237,9 +228,11 @@ namespace CxAPI_Core
             return reportResults;
 
         }
-        private bool findFirstorLastScan(long projectId, ScanObject scan, Dictionary<long, ReportStaging> keyValuePairs, bool operation)
+        private bool findFirstorLastScan(long projectId, ScanObject scan, List<Teams> teams, Dictionary<long, ReportStaging> keyValuePairs, bool operation)
         {
             getScans scans = new getScans();
+
+            string fullName = scans.getFullName(teams, scan.OwningTeamId);
 
             if (keyValuePairs.ContainsKey(scan.Project.Id))
             {
@@ -262,6 +255,7 @@ namespace CxAPI_Core
                     {
                         ProjectId = scan.Project.Id,
                         ProjectName = scan.Project.Name,
+                        TeamName = fullName,
                         dateTime = (DateTimeOffset)scan.DateAndTime.StartedOn,
                         High = scanStatistics.HighSeverity,
                         Medium = scanStatistics.MediumSeverity,
@@ -278,6 +272,7 @@ namespace CxAPI_Core
                 {
                     ProjectId = scan.Project.Id,
                     ProjectName = scan.Project.Name,
+                    TeamName = fullName,
                     dateTime = (DateTimeOffset)scan.DateAndTime.StartedOn,
                     High = scanStatistics.HighSeverity,
                     Medium = scanStatistics.MediumSeverity,
@@ -302,6 +297,45 @@ namespace CxAPI_Core
                 }
             }
             return result;
+        }
+
+        public bool waitForResult(List<ReportTrace> trace, getScanResults scanResults, List<ReportResultAll> resultNew, Dictionary<long, ReportStaging> end ,Dictionary<long, List<ReportResultAll>> last )
+        {
+            bool waitFlag = false;
+            while (!waitFlag)
+            {
+                if (token.debug && token.verbosity > 0) { Console.WriteLine("Sleeping 1 second(s)"); }
+                Thread.Sleep(1000);
+
+                foreach (ReportTrace rt in trace)
+                {
+                    waitFlag = true;
+                    if (!rt.isRead)
+                    {
+                        waitFlag = false;
+                        if (scanResults.GetResultStatus(rt.reportId, token))
+                        {
+                            if (token.debug && token.verbosity > 0) { Console.WriteLine("Got status for reportId {0}", rt.reportId); }
+                            var result = scanResults.GetResult(rt.reportId, token);
+                            if (result != null)
+                            {
+                                if (token.debug && token.verbosity > 0) { Console.WriteLine("Got data for reportId {0}", rt.reportId); }
+                                if (process_CxResponse(result, resultNew))
+                                {
+                                    rt.isRead = true;
+                                    getlastReport(result, end, last);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            if (token.debug && token.verbosity > 0) { Console.WriteLine("Waiting for reportId {0}", rt.reportId); }
+
+                        }
+                    }
+                }
+            }
+            return true;
         }
 
         public void Dispose()

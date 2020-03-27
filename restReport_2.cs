@@ -44,7 +44,7 @@ namespace CxAPI_Core
                         ReportResult result = scanResults.SetResultRequest(s.Id, "XML", token);
                         if (result != null)
                         {
-                            trace.Add(new ReportTrace(s.Project.Id, s.Project.Name, s.DateAndTime.StartedOn, s.Id, result.ReportId, "XML"));
+                            trace.Add(new ReportTrace(s.Project.Id, s.Project.Name, scans.getFullName(teams, s.OwningTeamId), s.DateAndTime.StartedOn, s.Id, result.ReportId, "XML"));
                         }
 
                     }
