@@ -44,7 +44,7 @@ namespace CxAPI_Core
                         {
                             trace.Add(new ReportTrace(s.Project.Id, s.Project.Name, scans.getFullName(teams, s.OwningTeamId), s.DateAndTime.StartedOn, s.Id, result.ReportId, "XML"));
                         }
-                        if (trace.Count % 10 == 0)
+                        if (trace.Count % 5 == 0)
                         {
                             waitForResult(trace, scanResults, resultNew, end, last);
                             trace.Clear();
@@ -60,7 +60,7 @@ namespace CxAPI_Core
             {
                 foreach (ReportOutput csv in reportOutputs)
                 {
-                    Console.WriteLine("{0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},{12},{13},{14},{15},{16}", csv.ProjectName, csv.company,csv.team, csv.LastHigh, csv.LastMedium, csv.LastLow, csv.NewHigh, csv.NewMedium, csv.NewLow, csv.DiffHigh, csv.DiffMedium, csv.DiffLow, csv.NotExploitable, csv.Confirmed, csv.ToVerify, csv.firstScan, csv.lastScan, csv.ScanCount);
+                    Console.WriteLine("{0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},{12},{13},{14},{15},{16},{17},{18}", csv.ProjectName, csv.company,csv.team, csv.LastHigh, csv.LastMedium, csv.LastLow, csv.NewHigh, csv.NewMedium, csv.NewLow, csv.DiffHigh, csv.DiffMedium, csv.DiffLow, csv.NotExploitable, csv.Confirmed, csv.ToVerify, csv.firstScan, csv.lastScan, csv.ScanCount);
                 }
             }
             else
@@ -304,8 +304,8 @@ namespace CxAPI_Core
             bool waitFlag = false;
             while (!waitFlag)
             {
-                if (token.debug && token.verbosity > 0) { Console.WriteLine("Sleeping 1 second(s)"); }
-                Thread.Sleep(1000);
+                if (token.debug && token.verbosity > 0) { Console.WriteLine("Sleeping 3 second(s)"); }
+                Thread.Sleep(3000);
 
                 foreach (ReportTrace rt in trace)
                 {
@@ -313,7 +313,13 @@ namespace CxAPI_Core
                     if (!rt.isRead)
                     {
                         waitFlag = false;
-                        if (scanResults.GetResultStatus(rt.reportId, token))
+                        if (rt.TimeStamp.AddMinutes(2) < DateTime.UtcNow)
+                        {
+                            Console.Error.WriteLine("ReportId/ScanId {0)/{1} timeout!", rt.reportId, rt.scanId);
+                            rt.isRead = true;
+                            continue;
+                        }
+                            if (scanResults.GetResultStatus(rt.reportId, token))
                         {
                             if (token.debug && token.verbosity > 0) { Console.WriteLine("Got status for reportId {0}", rt.reportId); }
                             var result = scanResults.GetResult(rt.reportId, token);
@@ -330,7 +336,6 @@ namespace CxAPI_Core
                         else
                         {
                             if (token.debug && token.verbosity > 0) { Console.WriteLine("Waiting for reportId {0}", rt.reportId); }
-
                         }
                     }
                 }

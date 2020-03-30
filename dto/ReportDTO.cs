@@ -40,6 +40,7 @@ namespace CxAPI_Core.dto
         public string teamName { get; set; }
         public DateTimeOffset? scanTime { get; set; }
         public bool isRead { get; set; }
+        public DateTime TimeStamp { get; set; }
 
         public ReportTrace(long projectId, string projectName, string teamName, DateTimeOffset? scanTime, long pScanId, long preportId, string reportType)
         {
@@ -51,6 +52,7 @@ namespace CxAPI_Core.dto
             this.scanTime = scanTime;
             this.reportType = reportType;
             this.isRead = false;
+            this.TimeStamp = DateTime.UtcNow;
         }
     }
     public partial class ReportLink

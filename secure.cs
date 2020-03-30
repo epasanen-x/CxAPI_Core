@@ -97,7 +97,7 @@ namespace CxAPI_Core
             token.bearer_token = (decrypt.token == null) ? String.Empty : decrypt.token;
 
             Int32.TryParse(decrypt.token_expires, out expiration);
-            token.expiration = 60 * 12;
+            token.expiration = 15;
             DateTime.TryParse(decrypt.token_creation, out timestamp);
             token.timestamp = timestamp;
 
