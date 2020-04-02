@@ -35,7 +35,7 @@ namespace CxAPI_Core.dto
         public long projectId { get; set; }
         public long scanId { get; set; }
         public long reportId { get; set; }
-        public string reportType {get; set;}
+        public string reportType { get; set; }
         public string projectName { get; set; }
         public string teamName { get; set; }
         public DateTimeOffset? scanTime { get; set; }
@@ -117,6 +117,7 @@ namespace CxAPI_Core.dto
         public long reportId { get; set; }
         public long pathId { get; set; }
         public long nodeId { get; set; }
+        public string isFalsePositive { get; set; }
         public long projectId { get; set; }
         public long queryId { get; set; }
         public long scanId { get; set; }
@@ -129,12 +130,13 @@ namespace CxAPI_Core.dto
         public int column { get; set; }
         public string firstLine { get; set; }
         public string fileName { get; set; }
+        public string deepLink { get; set; }
         public DateTime scanDate { get; set; }
     }
     public partial class ReportOutput
     {
         public string ProjectName { get; set; }
-       // public string TeamName { get; set; }
+        // public string TeamName { get; set; }
         public string company { get; set; }
         public string team { get; set; }
         public int StartHigh { get; set; }
@@ -201,4 +203,32 @@ namespace CxAPI_Core.dto
         public int ScanCount { get; set; }
     }
 
+    public partial class AgingOutput
+    {
+        public string ProjectName { get; set; }
+        public string company { get; set; }
+        public string team { get; set; }
+        public string presetName { get; set; }
+        public string Query { get; set; }
+        //public long similarityId { get; set; }
+        public string isFalsePositive { get; set; }
+        //public int startState { get; set; }
+        public string StateDesc { get; set; }
+        public string Status { get; set; }
+        public string Severity { get; set; }
+        //public int endState { get; set; }
+        //public string endStateDesc { get; set; }
+        //public string endStatus { get; set; }
+        //public string endSeverity { get; set; }
+        public int lineNo { get; set; }
+        public int column { get; set; }
+        //public string firstLine { get; set; }
+        public string fileName { get; set; }
+        public string deepLink { get; set; }
+        //public DateTime scanDate { get; set; }
+        public DateTimeOffset firstScan { get; set; }
+        public DateTimeOffset lastScan { get; set; }
+        public int age { get; set; }
+        public int scanCount { get; set; }
+    }
 }

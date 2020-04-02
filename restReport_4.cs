@@ -8,11 +8,11 @@ using CxAPI_Core.dto;
 
 namespace CxAPI_Core
 {
-    class restReport_1 : IDisposable
+    class restReport_4 : IDisposable
     {
         public resultClass token;
 
-        public restReport_1(resultClass token)
+        public restReport_4(resultClass token)
         {
             this.token = token;
         }
@@ -25,6 +25,7 @@ namespace CxAPI_Core
             Dictionary<long, ReportStaging> end = new Dictionary<long, ReportStaging>();
             Dictionary<long, List<ReportResultAll>> last = new Dictionary<long, List<ReportResultAll>>();
             Dictionary<long, ScanCount> scanCount = new Dictionary<long, ScanCount>();
+            Dictionary<DateTimeOffset, Dictionary<long, Dictionary<string, ReportResultExtended>>> extendedScan = new Dictionary<DateTimeOffset, Dictionary<long, Dictionary<string, ReportResultExtended>>>();
             getScanResults scanResults = new getScanResults();
             getScans scans = new getScans();
             List<Teams> teams = scans.getTeams(token);
@@ -36,8 +37,8 @@ namespace CxAPI_Core
                     if (matchProjectandTeam(s, teams))
                     {
                         setCount(s.Project.Id, scanCount);
-                        findFirstorLastScan(s.Project.Id,  s, teams ,start, true);
-                        findFirstorLastScan(s.Project.Id, s, teams , end, false);
+                        findFirstorLastScan(s.Project.Id, s, teams, start, true);
+                        findFirstorLastScan(s.Project.Id, s, teams, end, false);
 
                         ReportResult result = scanResults.SetResultRequest(s.Id, "XML", token);
                         if (result != null)
@@ -46,21 +47,21 @@ namespace CxAPI_Core
                         }
                         if (trace.Count % 5 == 0)
                         {
-                            waitForResult(trace, scanResults, resultNew, end, last);
+                            waitForResult(trace, scanResults, resultNew, extendedScan, end, last);
                             trace.Clear();
                         }
                     }
                 }
             }
-            waitForResult(trace, scanResults, resultNew, end, last);
+            waitForResult(trace, scanResults, resultNew, extendedScan, end, last);
             trace.Clear();
 
-            List<ReportOutput> reportOutputs = totalScansandReports(start, end, resultNew, last, scanCount);
+            List<AgingOutput> reportOutputs = totalAllResults(extendedScan, end);
             if (token.pipe)
             {
-                foreach (ReportOutput csv in reportOutputs)
+                foreach (AgingOutput csv in reportOutputs)
                 {
-                    Console.WriteLine("{0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},{12},{13},{14},{15},{16},{17},{18}", csv.ProjectName, csv.company,csv.team, csv.LastHigh, csv.LastMedium, csv.LastLow, csv.NewHigh, csv.NewMedium, csv.NewLow, csv.DiffHigh, csv.DiffMedium, csv.DiffLow, csv.NotExploitable, csv.Confirmed, csv.ToVerify, csv.firstScan, csv.lastScan, csv.ScanCount);
+                   // Console.WriteLine("{0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},{12},{13},{14},{15},{16},{17},{18}", csv.ProjectName, csv.company, csv.team, csv.LastHigh, csv.LastMedium, csv.LastLow, csv.NewHigh, csv.NewMedium, csv.NewLow, csv.DiffHigh, csv.DiffMedium, csv.DiffLow, csv.NotExploitable, csv.Confirmed, csv.ToVerify, csv.firstScan, csv.lastScan, csv.ScanCount);
                 }
             }
             else
@@ -121,7 +122,7 @@ namespace CxAPI_Core
                             else if (result.Severity == "Medium") { report.NewMedium++; }
                             else if (result.Severity == "Low") { report.NewLow++; }
                         }
-                    }    
+                    }
                 }
                 foreach (ReportResultAll result in lastScanResults)
                 {
@@ -157,32 +158,161 @@ namespace CxAPI_Core
             return reports;
         }
 
-        private bool process_CxResponse(XElement result, List<ReportResultAll> response)
+        private List<AgingOutput> totalAllResults(Dictionary<DateTimeOffset, Dictionary<long, Dictionary<string, ReportResultExtended>>> extendedScan, Dictionary<long, ReportStaging> end)
+        {
+            List<AgingOutput> reports = new List<AgingOutput>();
+
+            Dictionary<string, AgingOutput> allResults = new Dictionary<string, AgingOutput>();
+
+            Dictionary<long, Dictionary<string, ReportResultExtended>> scanByProject = new Dictionary<long, Dictionary<string, ReportResultExtended>>();
+            Dictionary<string, ReportResultExtended> scanByUnique = new Dictionary<string, ReportResultExtended>();
+
+            getScans scans = new getScans();
+            List<DateTimeOffset> dates = extendedScan.Keys.ToList();
+            dates.Sort();
+
+            foreach (DateTimeOffset key in dates)
+            {
+                scanByProject = extendedScan[key];
+                foreach (long projectId in scanByProject.Keys)
+                {
+                    scanByUnique = extendedScan[key][projectId];
+
+                    foreach (string uniqueKey in scanByUnique.Keys)
+                    {
+                        AgingOutput aging;
+                        if (!allResults.ContainsKey(uniqueKey))
+                        {
+                            string company = String.Empty;
+                            string team = String.Empty;
+                            string fileName = String.Empty;
+                            string[] split = scanByUnique[uniqueKey].teamName.Split('\\');
+                            if (split.Length > 1)
+                            {
+                                company = split[split.Length - 2];
+                                team = split[split.Length - 1];
+                            }
+                            string[] fileSplit = scanByUnique[uniqueKey].fileName.Split('/');
+                            if (fileSplit.Length > 1)
+                            {
+                                fileName = fileSplit[fileSplit.Length - 1];
+                            }
+                            aging = new AgingOutput()
+                            {
+                                ProjectName = scanByUnique[uniqueKey].projectName,
+                                team = team,
+                                company = company,
+                                presetName = scanByUnique[uniqueKey].presetName,
+                                Query = scanByUnique[uniqueKey].Query,
+                                //similarityId = scanByUnique[uniqueKey].similarityId,
+                                isFalsePositive = scanByUnique[uniqueKey].isFalsePositive,
+                                //startState = scanByUnique[uniqueKey].state,
+                                StateDesc = stateToString(scanByUnique[uniqueKey].state),
+                                Status = scanByUnique[uniqueKey].status,
+                                Severity = scanByUnique[uniqueKey].Severity,
+                                //endState = scanByUnique[uniqueKey].state,
+                                //endStateDesc = stateToString(scanByUnique[uniqueKey].state),
+                                //endStatus = scanByUnique[uniqueKey].status,
+                                //endSeverity = scanByUnique[uniqueKey].Severity,
+                                lineNo = scanByUnique[uniqueKey].lineNo,
+                                column = scanByUnique[uniqueKey].column,
+                                //firstLine = scanByUnique[uniqueKey].firstLine,
+                                fileName = fileName,
+                                deepLink = scanByUnique[uniqueKey].deepLink,
+                                firstScan = key,
+                                lastScan = key,
+                                scanCount = 1
+                            };
+                            allResults.Add(uniqueKey, aging);
+                            aging = allResults[uniqueKey];
+                        }
+                        else
+                        {
+                            aging = allResults[uniqueKey];
+                            aging.isFalsePositive = scanByUnique[uniqueKey].isFalsePositive;
+                            //aging.endState = scanByUnique[uniqueKey].state;
+                            aging.StateDesc = stateToString(scanByUnique[uniqueKey].state);
+                            aging.Status = scanByUnique[uniqueKey].status;
+                            aging.Severity = scanByUnique[uniqueKey].Severity;
+                            aging.lastScan = key;
+                            aging.scanCount++;
+                        }
+                        aging.age = (DateTimeOffset.Now - aging.firstScan.Date).Days;
+
+                        if (!isUniqueInProject(dates, projectId, uniqueKey, extendedScan))
+                        {
+                            aging.Status = "Fixed";
+                        }
+                        if ((aging.isFalsePositive.ToUpper().Contains("TRUE")) || aging.Status.Contains("Fixed"))
+                        {
+                            aging.age = 0;
+                        }
+                        allResults[uniqueKey] = aging;
+                    }
+                }
+
+            }
+            reports = allResults.Values.ToList();
+            return reports;
+        }
+
+
+        private bool process_CxResponse(XElement result, long report_id, long projectId, DateTimeOffset? scanDate, Dictionary<DateTimeOffset, Dictionary<long, Dictionary<string, ReportResultExtended>>> extendedScan)
         {
             try
             {
-                IEnumerable<XElement> newVulerability = from el in result.Descendants("Query").Descendants("Result")
-                                                        where (string)el.Attribute("Status").Value == "New"
-                                                        select el;
-
-                foreach (XElement el in newVulerability)
+                Dictionary<long, Dictionary<string, ReportResultExtended>> scanByProject = new Dictionary<long, Dictionary<string, ReportResultExtended>>();
+                Dictionary<string, ReportResultExtended> scanByUnique = new Dictionary<string, ReportResultExtended>();
+                IEnumerable<XElement> fixedVulerability = from el in result.Descendants("Query").Descendants("Result")
+                                                          select el;
+                foreach (XElement el in fixedVulerability)
                 {
                     XElement query = el.Parent;
                     XElement root = query.Parent;
-                    ReportResultAll isnew = new ReportResultAll()
+                    XElement path = el.Descendants("Path").FirstOrDefault();
+                    XElement pathNode = path.Descendants("PathNode").FirstOrDefault();
+                    XElement snippet = pathNode.Descendants("Snippet").FirstOrDefault();
+                    XElement line = snippet.Descendants("Line").FirstOrDefault();
+                    long SimilarityId = Convert.ToInt64(path.Attribute("SimilarityId").Value.ToString());
+                    ReportResultExtended isfixed = new ReportResultExtended()
                     {
                         Query = query.Attribute("name").Value.ToString(),
                         Group = query.Attribute("group").Value.ToString(),
+                        projectName = root.Attribute("ProjectName").Value.ToString(),
+                        presetName = root.Attribute("Preset").Value.ToString(),
+                        teamName = root.Attribute("TeamFullPathOnReportDate").Value.ToString(),
+                        scanDate = Convert.ToDateTime(root.Attribute("ScanStart").Value.ToString()),
                         projectId = Convert.ToInt64(root.Attribute("ProjectId").Value.ToString()),
                         scanId = Convert.ToInt64(root.Attribute("ScanId").Value.ToString()),
                         status = el.Attribute("Status").Value.ToString(),
                         Severity = el.Attribute("Severity").Value.ToString(),
+                        isFalsePositive = el.Attribute("FalsePositive").Value.ToString(),
+                        resultId = Convert.ToInt64(path.Attribute("ResultId").Value.ToString()),
+                        reportId = report_id,
+                        nodeId = Convert.ToInt64(el.Attribute("NodeId").Value.ToString()),
+                        similarityId = Convert.ToInt64(path.Attribute("SimilarityId").Value.ToString()),
+                        pathId = Convert.ToInt64(path.Attribute("PathId").Value.ToString()),
                         state = Convert.ToInt32(el.Attribute("state").Value.ToString()),
-                        teamName = root.Attribute("TeamFullPathOnReportDate").Value.ToString()
+                        fileName = el.Attribute("FileName").Value.ToString(),
+                        lineNo = Convert.ToInt32(el.Attribute("Line").Value.ToString()),
+                        column = Convert.ToInt32(el.Attribute("Column").Value.ToString()),
+                        firstLine = line.Descendants("Code").FirstOrDefault().Value.ToString(),
+                        queryId = Convert.ToInt64(query.Attribute("id").Value.ToString()),
+                        deepLink = el.Attribute("DeepLink").Value.ToString()
                     };
-                    response.Add(isnew);
-
+                    string uniqueKey = String.Format("{0}_{1}_{2}_{3}", isfixed.similarityId, isfixed.queryId, isfixed.lineNo, isfixed.column);
+                    if (token.debug && token.verbosity > 0)
+                    {
+                        Console.WriteLine(String.Format("Processing: project:{0} scanDate: {1} uniquekey: {2} pathId: {3} line:{4} column:{5}", isfixed.projectName, scanDate, uniqueKey, isfixed.pathId, isfixed.lineNo, isfixed.column));
+                    }
+                    if (!scanByUnique.TryAdd(uniqueKey, isfixed))
+                    {
+                        Console.Error.WriteLine(String.Format("Duplicate key: project:{0} scanDate: {1} uniquekey: {2} pathId: {3} line:{4} column:{5}", isfixed.projectName, scanDate, uniqueKey, isfixed.pathId, isfixed.lineNo, isfixed.column));
+                    }
                 }
+                scanByProject.Add(projectId, scanByUnique);
+                extendedScan.TryAdd((DateTimeOffset)scanDate, scanByProject);
+
                 return true;
             }
             catch (Exception ex)
@@ -299,7 +429,7 @@ namespace CxAPI_Core
             return result;
         }
 
-        public bool waitForResult(List<ReportTrace> trace, getScanResults scanResults, List<ReportResultAll> resultNew, Dictionary<long, ReportStaging> end ,Dictionary<long, List<ReportResultAll>> last )
+        public bool waitForResult(List<ReportTrace> trace, getScanResults scanResults, List<ReportResultAll> resultNew, Dictionary<DateTimeOffset, Dictionary<long, Dictionary<string, ReportResultExtended>>> extendedScan, Dictionary<long, ReportStaging> end, Dictionary<long, List<ReportResultAll>> last)
         {
             bool waitFlag = false;
             while (!waitFlag)
@@ -319,14 +449,14 @@ namespace CxAPI_Core
                             rt.isRead = true;
                             continue;
                         }
-                            if (scanResults.GetResultStatus(rt.reportId, token))
+                        if (scanResults.GetResultStatus(rt.reportId, token))
                         {
                             if (token.debug && token.verbosity > 0) { Console.WriteLine("Got status for reportId {0}", rt.reportId); }
                             var result = scanResults.GetResult(rt.reportId, token);
                             if (result != null)
                             {
                                 if (token.debug && token.verbosity > 0) { Console.WriteLine("Got data for reportId {0}", rt.reportId); }
-                                if (process_CxResponse(result, resultNew))
+                                if (process_CxResponse(result, rt.reportId, rt.projectId, rt.scanTime, extendedScan))
                                 {
                                     rt.isRead = true;
                                     getlastReport(result, end, last);
@@ -341,6 +471,37 @@ namespace CxAPI_Core
                 }
             }
             return true;
+        }
+        private string stateToString(int state)
+        {
+            if (state == 0) { return "To Verify"; }
+            if (state == 1) { return "Not Explotible"; }
+            if (state == 2) { return "Confirmed"; }
+
+            return "Other";
+        }
+
+        private bool isUniqueInProject(List<DateTimeOffset> dates, long projectId, string uniqueKey, Dictionary<DateTimeOffset, Dictionary<long, Dictionary<string, ReportResultExtended>>> extendedScan)
+        {
+            bool result = false;
+            Dictionary<string, ReportResultExtended> lastScan = new Dictionary<string, ReportResultExtended>();
+            Dictionary<long, Dictionary<string, ReportResultExtended>> lastProject = new Dictionary<long, Dictionary<string, ReportResultExtended>>();
+
+            List<DateTimeOffset> clone = new List<DateTimeOffset>(dates);
+            clone.Reverse();
+          
+
+            foreach (DateTimeOffset date in clone)
+            {
+                lastProject = extendedScan[date];
+                if (lastProject.ContainsKey(projectId))
+                {
+                    lastScan = lastProject[projectId];
+                    break;
+                }         
+            }
+            result = lastScan.ContainsKey(uniqueKey);
+            return result;
         }
 
 

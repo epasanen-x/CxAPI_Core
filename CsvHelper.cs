@@ -94,5 +94,22 @@ namespace CxAPI_Core
             }
             return 0;
         }
+        public int writeCVSFile(List<AgingOutput> projectList, resultClass token)
+        {
+            try
+            {
+                using (var writer = new StreamWriter(token.file_path + token.os_path + token.file_name))
+                using (var csv = new CsvWriter(writer))
+                {
+                    csv.WriteRecords(projectList);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.Error.Write(ex.ToString());
+                return -1;
+            }
+            return 0;
+        }
     }
 }

@@ -64,6 +64,16 @@ namespace CxAPI_Core
                                 }
                             }
                         }
+                        else if (token.report_name.Contains("REST_REPORT_4"))
+                        {
+                            using (restReport_4 restReport = new restReport_4(token))
+                            {
+                                if (token.report_name == "REST_REPORT_4")
+                                {
+                                    restReport.fetchReportsbyDate();
+                                }
+                            }
+                        }
                         else if (token.report_name.Contains("REST_STORE_1"))
                         {
                             using (restStore_1 restReport = new restStore_1(token))

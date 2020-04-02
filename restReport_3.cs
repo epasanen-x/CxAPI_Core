@@ -105,6 +105,8 @@ namespace CxAPI_Core
                     XElement snippet = pathNode.Descendants("Snippet").FirstOrDefault();
                     XElement line = snippet.Descendants("Line").FirstOrDefault();
 
+                    //long ResultId = Convert.ToInt64(path.Attribute("ResultId").Value.ToString());
+                    //string key = "New-" + ResultId.ToString();
                     long SimilarityId = Convert.ToInt64(path.Attribute("SimilarityId").Value.ToString());
                     string key = "New-" + SimilarityId.ToString();
                     ReportResultExtended resultExtended = response.GetValueOrDefault(key);
@@ -152,6 +154,8 @@ namespace CxAPI_Core
                     XElement snippet = pathNode.Descendants("Snippet").FirstOrDefault();
                     XElement line = snippet.Descendants("Line").FirstOrDefault();
 
+                    //long ResultId = Convert.ToInt64(path.Attribute("ResultId").Value.ToString());
+                    //string key = "Recurring-" + ResultId.ToString();
                     long SimilarityId = Convert.ToInt64(path.Attribute("SimilarityId").Value.ToString());
                     string key = "Recurring-" + SimilarityId.ToString();
                     ReportResultExtended resultExtended = response.GetValueOrDefault(key);
