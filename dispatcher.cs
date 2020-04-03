@@ -94,8 +94,12 @@ namespace CxAPI_Core
                             {
                                 cxSoapSDK.makeProjectScanCsv_2();
                             }
+                            if (token.report_name == "REPORT_3")
+                            {
+                                cxSoapSDK.makeProjectScanCsv_3();
+                            }
                         }
-          
+
                         break;
                     }
                 case api_action.getProjects:

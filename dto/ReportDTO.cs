@@ -131,6 +131,8 @@ namespace CxAPI_Core.dto
         public string firstLine { get; set; }
         public string fileName { get; set; }
         public string deepLink { get; set; }
+        public string nodeName { get; set; }
+        public string remark { get; set; }
         public DateTime scanDate { get; set; }
     }
     public partial class ReportOutput
@@ -225,6 +227,7 @@ namespace CxAPI_Core.dto
         //public string firstLine { get; set; }
         public string fileName { get; set; }
         public string deepLink { get; set; }
+        public string remark { get; set; }
         //public DateTime scanDate { get; set; }
         public DateTimeOffset firstScan { get; set; }
         public DateTimeOffset lastScan { get; set; }

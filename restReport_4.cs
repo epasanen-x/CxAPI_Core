@@ -1,10 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.SqlTypes;
+using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
+using System.Xml;
 using System.Xml.Linq;
 using CxAPI_Core.dto;
+
 
 namespace CxAPI_Core
 {
@@ -219,6 +224,7 @@ namespace CxAPI_Core
                                 //firstLine = scanByUnique[uniqueKey].firstLine,
                                 fileName = fileName,
                                 deepLink = scanByUnique[uniqueKey].deepLink,
+                                remark = scanByUnique[uniqueKey].remark,
                                 firstScan = key,
                                 lastScan = key,
                                 scanCount = 1
@@ -243,7 +249,7 @@ namespace CxAPI_Core
                         {
                             aging.Status = "Fixed";
                         }
-                        if ((aging.isFalsePositive.ToUpper().Contains("TRUE")) || aging.Status.Contains("Fixed"))
+                        if ((aging.isFalsePositive.ToUpper().Contains("TRUE")) || (aging.Status.Contains("Fixed")))
                         {
                             aging.age = 0;
                         }
@@ -271,6 +277,9 @@ namespace CxAPI_Core
                     XElement root = query.Parent;
                     XElement path = el.Descendants("Path").FirstOrDefault();
                     XElement pathNode = path.Descendants("PathNode").FirstOrDefault();
+                    //List<XElement> allNode = path.Descendants("PathNode").Elements().ToList();
+                    //IEnumerable<XElement> allNode = path.Descendants("PathNode").Elements();
+                    XElement lastNode = path.Descendants("PathNode").LastOrDefault();
                     XElement snippet = pathNode.Descendants("Snippet").FirstOrDefault();
                     XElement line = snippet.Descendants("Line").FirstOrDefault();
                     long SimilarityId = Convert.ToInt64(path.Attribute("SimilarityId").Value.ToString());
@@ -297,17 +306,22 @@ namespace CxAPI_Core
                         lineNo = Convert.ToInt32(el.Attribute("Line").Value.ToString()),
                         column = Convert.ToInt32(el.Attribute("Column").Value.ToString()),
                         firstLine = line.Descendants("Code").FirstOrDefault().Value.ToString(),
+                        nodeName = pathNode.Descendants("Name").FirstOrDefault().Value.ToString(),
                         queryId = Convert.ToInt64(query.Attribute("id").Value.ToString()),
+                        remark = el.Attribute("Remark").Value.ToString(),
                         deepLink = el.Attribute("DeepLink").Value.ToString()
                     };
                     string uniqueKey = String.Format("{0}_{1}_{2}_{3}", isfixed.similarityId, isfixed.queryId, isfixed.lineNo, isfixed.column);
-                    if (token.debug && token.verbosity > 0)
+                    uniqueKey = makeHash(pathNode, lastNode, uniqueKey);
+                    //uniqueKey = makeHash(allNode, uniqueKey);
+
+                    ; if (token.debug && token.verbosity > 0)
                     {
-                        Console.WriteLine(String.Format("Processing: project:{0} scanDate: {1} uniquekey: {2} pathId: {3} line:{4} column:{5}", isfixed.projectName, scanDate, uniqueKey, isfixed.pathId, isfixed.lineNo, isfixed.column));
+                        Console.WriteLine(String.Format("Processing: project:{0} scanDate: {1} uniquekey: {2} pathId: {3} nodeId: {4} line:{5} column:{6}", isfixed.projectName, scanDate, uniqueKey, isfixed.pathId, isfixed.nodeId ,isfixed.lineNo, isfixed.column));
                     }
                     if (!scanByUnique.TryAdd(uniqueKey, isfixed))
                     {
-                        Console.Error.WriteLine(String.Format("Duplicate key: project:{0} scanDate: {1} uniquekey: {2} pathId: {3} line:{4} column:{5}", isfixed.projectName, scanDate, uniqueKey, isfixed.pathId, isfixed.lineNo, isfixed.column));
+                        Console.Error.WriteLine(String.Format("Duplicate key: project:{0} scanDate: {1} uniquekey: {2} pathId: {3} nodeId: {4} line:{5} column:{6}", isfixed.projectName, scanDate, uniqueKey, isfixed.pathId, isfixed.nodeId, isfixed.lineNo, isfixed.column));
                     }
                 }
                 scanByProject.Add(projectId, scanByUnique);
@@ -419,9 +433,9 @@ namespace CxAPI_Core
 
             string fullName = scans.getFullName(teams, s.OwningTeamId);
 
-            if ((String.IsNullOrEmpty(token.project_name) || ((!String.IsNullOrEmpty(token.project_name)) && (s.Project.Name.Contains(token.project_name)))))
+            if ((String.IsNullOrEmpty(token.project_name) || ((!String.IsNullOrEmpty(token.project_name)) && (s.Project.Name.ToLower().Contains(token.project_name.ToLower())))))
             {
-                if ((String.IsNullOrEmpty(token.team_name) || ((!String.IsNullOrEmpty(token.team_name)) && (!String.IsNullOrEmpty(fullName)) && (fullName.Contains(token.team_name)))))
+                if ((String.IsNullOrEmpty(token.team_name) || ((!String.IsNullOrEmpty(token.team_name)) && (!String.IsNullOrEmpty(fullName)) && (fullName.ToLower().Contains(token.team_name.ToLower())))))
                 {
                     result = true;
                 }
@@ -504,7 +518,50 @@ namespace CxAPI_Core
             return result;
         }
 
+        private string makeHash(XElement start, XElement last, string uniqueKey)
+        {
+            string result = String.Empty;
+            using (StringWriter sw = new StringWriter())
+            {
+                start.Save(sw);
+                last.Save(sw);
+                result = sw.ToString();
+            }
+            result += uniqueKey;
+            result = ComputeSha256Hash(result);
+            return result;
+        }
 
+        private string makeHash(IEnumerable<XElement> allNodes, string uniqueKey)
+        {
+            string result = String.Empty;
+            StringWriter sb = new StringWriter();
+            foreach (XElement node in allNodes)
+            {
+                node.Save(sb);
+            }
+            result = sb.ToString() + uniqueKey;
+            sb.Close();
+            result = ComputeSha256Hash(result);
+            return result;
+        }
+        static string ComputeSha256Hash(string rawData)
+        {
+            // Create a SHA256   
+            using (SHA256 sha256Hash = SHA256.Create())
+            {
+                // ComputeHash - returns byte array  
+                byte[] bytes = sha256Hash.ComputeHash(Encoding.UTF8.GetBytes(rawData));
+
+                // Convert byte array to a string   
+                StringBuilder builder = new StringBuilder();
+                for (int i = 0; i < bytes.Length; i++)
+                {
+                    builder.Append(bytes[i].ToString("x2"));
+                }
+                return builder.ToString();
+            }
+        }
 
         public void Dispose()
         {

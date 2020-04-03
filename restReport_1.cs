@@ -289,15 +289,16 @@ namespace CxAPI_Core
 
             string fullName = scans.getFullName(teams, s.OwningTeamId);
 
-            if ((String.IsNullOrEmpty(token.project_name) || ((!String.IsNullOrEmpty(token.project_name)) && (s.Project.Name.Contains(token.project_name)))))
+            if ((String.IsNullOrEmpty(token.project_name) || ((!String.IsNullOrEmpty(token.project_name)) && (s.Project.Name.ToLower().Contains(token.project_name.ToLower())))))
             {
-                if ((String.IsNullOrEmpty(token.team_name) || ((!String.IsNullOrEmpty(token.team_name)) && (!String.IsNullOrEmpty(fullName)) && (fullName.Contains(token.team_name)))))
+                if ((String.IsNullOrEmpty(token.team_name) || ((!String.IsNullOrEmpty(token.team_name)) && (!String.IsNullOrEmpty(fullName)) && (fullName.ToLower().Contains(token.team_name.ToLower())))))
                 {
                     result = true;
                 }
             }
             return result;
         }
+
 
         public bool waitForResult(List<ReportTrace> trace, getScanResults scanResults, List<ReportResultAll> resultNew, Dictionary<long, ReportStaging> end ,Dictionary<long, List<ReportResultAll>> last )
         {

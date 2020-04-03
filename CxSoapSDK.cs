@@ -72,7 +72,7 @@ namespace CxAPI_Core
         {
             if (String.IsNullOrEmpty(_token.session_id))
             {
-                GetResolverSDKUrl();
+                //GetResolverSDKUrl();
                 CxSDKWebService.CxSDKWebServiceSoapClient cxSDKWebServiceSoapClient = new CxSDKWebService.CxSDKWebServiceSoapClient(CxSDKWebService.CxSDKWebServiceSoapClient.EndpointConfiguration.CxSDKWebServiceSoap12);
                 CxSDKWebService.LoginResponse cxWSResponseLoginData = cxSDKWebServiceSoapClient.LoginAsync(_credentials, 1033).Result;
                 _token.session_id = cxWSResponseLoginData.Body.LoginResult.SessionId;
@@ -232,6 +232,23 @@ namespace CxAPI_Core
                 {
                     _token.status = cvsHelper.writeCVSFile(csvOutput, _token);
                 }
+            }
+            return _token;
+        }
+        public resultClass makeProjectScanCsv_3()
+        {
+            _token.status = -1;
+            csvHelper cvsHelper = new csvHelper();
+
+            if ((_token.start_time == null))
+            {
+                Console.Error.WriteLine("Start time must be provided.");
+                return _token;
+            }
+            if (LogAdminIn())
+            {
+                CxSDKWebService.CxSDKWebServiceSoapClient cxSDKProxy = new CxSDKWebService.CxSDKWebServiceSoapClient(CxSDKWebService.CxSDKWebServiceSoapClient.EndpointConfiguration.CxSDKWebServiceSoap12);
+                CxSDKWebService.GetAllUsersResponse response = cxSDKProxy.GetAllUsersAsync(_token.session_id).Result;
             }
             return _token;
         }
