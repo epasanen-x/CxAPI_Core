@@ -66,7 +66,7 @@ namespace CxAPI_Core
             {
                 foreach (AgingOutput csv in reportOutputs)
                 {
-                   // Console.WriteLine("{0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},{12},{13},{14},{15},{16},{17},{18}", csv.ProjectName, csv.company, csv.team, csv.LastHigh, csv.LastMedium, csv.LastLow, csv.NewHigh, csv.NewMedium, csv.NewLow, csv.DiffHigh, csv.DiffMedium, csv.DiffLow, csv.NotExploitable, csv.Confirmed, csv.ToVerify, csv.firstScan, csv.lastScan, csv.ScanCount);
+                    // Console.WriteLine("{0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},{12},{13},{14},{15},{16},{17},{18}", csv.ProjectName, csv.company, csv.team, csv.LastHigh, csv.LastMedium, csv.LastLow, csv.NewHigh, csv.NewMedium, csv.NewLow, csv.DiffHigh, csv.DiffMedium, csv.DiffLow, csv.NotExploitable, csv.Confirmed, csv.ToVerify, csv.firstScan, csv.lastScan, csv.ScanCount);
                 }
             }
             else
@@ -317,7 +317,7 @@ namespace CxAPI_Core
 
                     ; if (token.debug && token.verbosity > 0)
                     {
-                        Console.WriteLine(String.Format("Processing: project:{0} scanDate: {1} uniquekey: {2} pathId: {3} nodeId: {4} line:{5} column:{6}", isfixed.projectName, scanDate, uniqueKey, isfixed.pathId, isfixed.nodeId ,isfixed.lineNo, isfixed.column));
+                        Console.WriteLine(String.Format("Processing: project:{0} scanDate: {1} uniquekey: {2} pathId: {3} nodeId: {4} line:{5} column:{6}", isfixed.projectName, scanDate, uniqueKey, isfixed.pathId, isfixed.nodeId, isfixed.lineNo, isfixed.column));
                     }
                     if (!scanByUnique.TryAdd(uniqueKey, isfixed))
                     {
@@ -459,7 +459,7 @@ namespace CxAPI_Core
                         waitFlag = false;
                         if (rt.TimeStamp.AddMinutes(2) < DateTime.UtcNow)
                         {
-                            Console.Error.WriteLine("ReportId/ScanId {0)/{1} timeout!", rt.reportId, rt.scanId);
+                            Console.Error.WriteLine("ReportId/ScanId {0}/{1} timeout!", rt.reportId, rt.scanId);
                             rt.isRead = true;
                             continue;
                         }
@@ -475,6 +475,11 @@ namespace CxAPI_Core
                                     rt.isRead = true;
                                     getlastReport(result, end, last);
                                 }
+                            }
+                            else
+                            {
+                                Console.Error.WriteLine("Failed retrieving reportId {0}", rt.reportId); 
+                                rt.isRead = true;
                             }
                         }
                         else
@@ -503,7 +508,7 @@ namespace CxAPI_Core
 
             List<DateTimeOffset> clone = new List<DateTimeOffset>(dates);
             clone.Reverse();
-          
+
 
             foreach (DateTimeOffset date in clone)
             {
@@ -512,7 +517,7 @@ namespace CxAPI_Core
                 {
                     lastScan = lastProject[projectId];
                     break;
-                }         
+                }
             }
             result = lastScan.ContainsKey(uniqueKey);
             return result;

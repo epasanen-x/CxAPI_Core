@@ -16,6 +16,7 @@ namespace CxAPI_Core
             secure secure = new secure(token);
             _options.debug = token.debug;
             _options.level = token.verbosity;
+            _options.token = token;
 
             switch (token.api_action)
             {

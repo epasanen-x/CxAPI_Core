@@ -2,7 +2,7 @@
   "profiles": {
     "CxAPI_Core": {
       "commandName": "Project",
-      "commandLineArgs": "--scan_results --report_name=REST_REPORT_4 --start_time=2018-01-01 --end_time=2020-12-31 --debug --verbose=0 --file_name=report_3a.csv --file_path=\"C:\\\\scans\\\\Ford\\\\\" --save_result=XML"
+      "commandLineArgs": "--scan_results --report_name=REPORT_3 --start_time=2018-01-01 --end_time=2020-12-31 --debug --verbose=0 --file_name=report_4.csv --file_path=\"C:\\\\scans\\\\Ford\\\\\" --save_result=XML"
     }
   }
 }

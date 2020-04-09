@@ -146,6 +146,21 @@ namespace CxAPI_Core
      
     }
 
+    public class CxUsers
+    {
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+        public string email { get; set; }
+        public bool isAudit { get; set; }
+        public DateTime createDate { get; set; }
+        public DateTime lastLogin { get; set; }
+        public string exparation { get; set; }
+        public string company { get; set; }
+        public bool isActive { get; set; }
+        public string jobTitle { get; set; }
+        public string teams { get; set; }
+    }
 }
+
 
 

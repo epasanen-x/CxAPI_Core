@@ -7,8 +7,8 @@ namespace CxAPI_Core
 {
     public class CxSoapSDK : IDisposable
     {
- 
-       
+
+
         CxSDKWebService.Credentials _credentials;
         settingClass _settings;
         resultClass _token;
@@ -72,7 +72,7 @@ namespace CxAPI_Core
         {
             if (String.IsNullOrEmpty(_token.session_id))
             {
-                //GetResolverSDKUrl();
+                GetResolverSDKUrl();
                 CxSDKWebService.CxSDKWebServiceSoapClient cxSDKWebServiceSoapClient = new CxSDKWebService.CxSDKWebServiceSoapClient(CxSDKWebService.CxSDKWebServiceSoapClient.EndpointConfiguration.CxSDKWebServiceSoap12);
                 CxSDKWebService.LoginResponse cxWSResponseLoginData = cxSDKWebServiceSoapClient.LoginAsync(_credentials, 1033).Result;
                 _token.session_id = cxWSResponseLoginData.Body.LoginResult.SessionId;
@@ -88,8 +88,8 @@ namespace CxAPI_Core
         public resultClass makeScanCsv(resultClass token)
         {
             token.status = -1;
-           
-            if ((token.start_time == null ) || (token.end_time == null))
+
+            if ((token.start_time == null) || (token.end_time == null))
             {
                 Console.Error.WriteLine("Start time and End time must be provided.");
                 return token;
@@ -97,14 +97,14 @@ namespace CxAPI_Core
             if (LogAdminIn())
             {
                 CxSDKWebService.CxSDKWebServiceSoapClient cxSDKProxy = new CxSDKWebService.CxSDKWebServiceSoapClient(CxSDKWebService.CxSDKWebServiceSoapClient.EndpointConfiguration.CxSDKWebServiceSoap12);
-                Dictionary<long,string> presets = GetPresetConfiguration(cxSDKProxy);
+                Dictionary<long, string> presets = GetPresetConfiguration(cxSDKProxy);
                 Dictionary<long, CxSDKWebService.ProjectDisplayData> projects = GetAllProjects(cxSDKProxy);
 
                 foreach (KeyValuePair<long, CxSDKWebService.ProjectDisplayData> project in projects)
                 {
                     CxSDKWebService.GetProjectConfigurationResponse response = GetProjectConfiguration(cxSDKProxy, token, project.Value.projectID);
                     csvScanOutput_1 csv = new csvScanOutput_1();
-                 
+
                 }
                 token.status = 0;
             }
@@ -115,7 +115,7 @@ namespace CxAPI_Core
         {
             _token.status = -1;
             csvHelper cvsHelper = new csvHelper();
-           
+
 
             if ((_token.start_time == null))
             {
@@ -196,7 +196,7 @@ namespace CxAPI_Core
                 {
                     CxSDKWebService.ProjectDisplayData proj = projects[scans.ProjectID];
                     CxSDKWebService.CxDateTime scanDate = proj.LastScanDate;
- 
+
                     DateTime lastScanDate = DateTime.Parse(String.Format("{0}/{1}/{2} {3}:{4}:{5}", scanDate.Month, scanDate.Day, scanDate.Year, scanDate.Hour, scanDate.Minute, scanDate.Second));
                     if (lastScanDate > _token.start_time)
 
@@ -247,8 +247,36 @@ namespace CxAPI_Core
             }
             if (LogAdminIn())
             {
+                List<CxUsers> UserList = new List<CxUsers>();
+
                 CxSDKWebService.CxSDKWebServiceSoapClient cxSDKProxy = new CxSDKWebService.CxSDKWebServiceSoapClient(CxSDKWebService.CxSDKWebServiceSoapClient.EndpointConfiguration.CxSDKWebServiceSoap12);
                 CxSDKWebService.GetAllUsersResponse response = cxSDKProxy.GetAllUsersAsync(_token.session_id).Result;
+
+                foreach (CxSDKWebService.UserData userData in response.Body.GetAllUsersResult.UserDataList)
+                {
+                    CxUsers userList = new CxUsers()
+                    {
+                        FirstName = userData.FirstName,
+                        LastName = userData.LastName,
+                        email = userData.Email,
+                        isAudit = userData.AuditUser,
+                        createDate = userData.DateCreated,
+                        lastLogin = userData.LastLoginDate,
+                        exparation = userData.willExpireAfterDays,
+                        company = userData.CompanyName,
+                        isActive = userData.IsActive,
+                        jobTitle = userData.JobTitle
+                    };
+                    foreach (CxSDKWebService.Group group in userData.GroupList)
+                    {
+                        string groupName = group.GroupName;
+                        userList.teams += String.Format("{0}: {1};", group.Type.ToString(), group.GroupName);
+                    }
+                    UserList.Add(userList);
+                }
+                    csvHelper csvHelper = new csvHelper();
+                    csvHelper.writeCVSFile(UserList, _token);
+                
             }
             return _token;
         }
@@ -267,10 +295,11 @@ namespace CxAPI_Core
             }
             return null;
         }
-        public CxSDKWebService.GetProjectConfigurationResponse GetProjectConfiguration(CxSDKWebService.CxSDKWebServiceSoapClient cxSDKProxy, resultClass token,long project_id)
+        public CxSDKWebService.GetProjectConfigurationResponse GetProjectConfiguration(CxSDKWebService.CxSDKWebServiceSoapClient cxSDKProxy, resultClass token, long project_id)
         {
             if (LogAdminIn())
-            {   if (cxSDKProxy == null)
+            {
+                if (cxSDKProxy == null)
                 {
                     cxSDKProxy = new CxSDKWebService.CxSDKWebServiceSoapClient(CxSDKWebService.CxSDKWebServiceSoapClient.EndpointConfiguration.CxSDKWebServiceSoap12); ;
                 }
@@ -279,7 +308,7 @@ namespace CxAPI_Core
             }
             return null;
         }
-        public Dictionary<long,string> GetPresetConfiguration(CxSDKWebService.CxSDKWebServiceSoapClient cxSDKProxy)
+        public Dictionary<long, string> GetPresetConfiguration(CxSDKWebService.CxSDKWebServiceSoapClient cxSDKProxy)
         {
             Dictionary<long, string> presets = new Dictionary<long, string>();
             if (LogAdminIn())
@@ -289,17 +318,17 @@ namespace CxAPI_Core
                     cxSDKProxy = new CxSDKWebService.CxSDKWebServiceSoapClient(CxSDKWebService.CxSDKWebServiceSoapClient.EndpointConfiguration.CxSDKWebServiceSoap12); ;
                 }
                 CxSDKWebService.GetPresetListResponse cxWSResponsePresetList = cxSDKProxy.GetPresetListAsync(_token.session_id).Result;
-                
+
                 List<CxSDKWebService.Preset> getPresetListResponses = new List<CxSDKWebService.Preset>(cxWSResponsePresetList.Body.GetPresetListResult.PresetList);
-                foreach(CxSDKWebService.Preset preset in getPresetListResponses)
+                foreach (CxSDKWebService.Preset preset in getPresetListResponses)
                 {
                     presets.Add(preset.ID, preset.PresetName);
                 }
                 return presets;
             }
-           return null;
+            return null;
         }
-    
+
         public Dictionary<long, CxSDKWebService.ProjectDisplayData> GetAllProjects(CxSDKWebService.CxSDKWebServiceSoapClient cxSDKProxy)
         {
             Dictionary<long, CxSDKWebService.ProjectDisplayData> projects = new Dictionary<long, CxSDKWebService.ProjectDisplayData>();
@@ -314,7 +343,7 @@ namespace CxAPI_Core
                 List<CxSDKWebService.ProjectDisplayData> getProjectListResponses = new List<CxSDKWebService.ProjectDisplayData>(cxWSResponseProjects.Body.GetProjectsDisplayDataResult.projectList);
                 foreach (CxSDKWebService.ProjectDisplayData project in getProjectListResponses)
                 {
-                   projects.Add(project.projectID,project);
+                    projects.Add(project.projectID, project);
                 }
                 return projects;
             }
@@ -334,7 +363,7 @@ namespace CxAPI_Core
                 List<CxSDKWebService.ScanDisplayData> scans = new List<CxSDKWebService.ScanDisplayData>(getProjecScannedDisplay.Body.GetScansDisplayDataForAllProjectsResult.ScanList);
 
 
-                foreach (CxSDKWebService.ScanDisplayData scan  in scans)
+                foreach (CxSDKWebService.ScanDisplayData scan in scans)
                 {
                     CxSDKWebService.CxDateTime scanDate = scan.QueuedDateTime;
                     DateTime firstScanDate = DateTime.Parse(String.Format("{0}/{1}/{2} {3}:{4}:{5}", scanDate.Month, scanDate.Day, scanDate.Year, scanDate.Hour, scanDate.Minute, scanDate.Second));

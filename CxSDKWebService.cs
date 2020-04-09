@@ -11,13 +11,19 @@ namespace CxSDKWebService
         {
             secure secure = new secure();
             settingClass settings = secure.get_settings();
-            if (settings.debug == "true")
-            {
-                Console.WriteLine("CxSDKWebService called: {0}", settings.CxSDKWebService);
-            }
+
+            Console.WriteLine("CxSDKWebService called: {0}", settings.CxSDKWebService);
+            Console.WriteLine("CxSDKWebService called: {0}", _options.token.user_name);
             serviceEndpoint.Address =
                 new System.ServiceModel.EndpointAddress(new System.Uri(settings.CxSDKWebService),
                 new System.ServiceModel.DnsEndpointIdentity(""));
+
+            System.ServiceModel.BasicHttpBinding binding = new System.ServiceModel.BasicHttpBinding();
+            binding.Security.Mode = System.ServiceModel.BasicHttpSecurityMode.Transport;
+            binding.Security.Transport.ClientCredentialType = System.ServiceModel.HttpClientCredentialType.None;
+            serviceEndpoint.Binding = binding;
+
         }
     }
+
 }

@@ -333,14 +333,20 @@ namespace CxAPI_Core
             {
                 spinner.Turn();
                 waitFlag = true;
-                if (token.debug && token.verbosity > 0) { Console.WriteLine("Sleeping 1 second(s)"); }
-                Thread.Sleep(1000);
+                if (token.debug && token.verbosity > 0) { Console.WriteLine("Sleeping 3 second(s)"); }
+                Thread.Sleep(3000);
                 foreach (ReportTrace rt in trace)
                 {
                     if (!rt.isRead)
                     {
                         waitFlag = false;
-                        if (token.debug && token.verbosity > 0) { Console.WriteLine("Testing report.Id {0}", rt.reportId); }
+                        if (rt.TimeStamp.AddMinutes(2) < DateTime.UtcNow)
+                        {
+                            Console.Error.WriteLine("ReportId/ScanId {0}/{1} timeout!", rt.reportId, rt.scanId);
+                            rt.isRead = true;
+                            continue;
+                        }
+                        if (token.debug && token.verbosity > 0) { Console.WriteLine("Checking for report.Id {0}", rt.reportId); }
                         if (scanResults.GetResultStatus(rt.reportId, token))
                         {
                             if (token.debug && token.verbosity > 0) { Console.WriteLine("Found report.Id {0}", rt.reportId); }
@@ -356,6 +362,15 @@ namespace CxAPI_Core
                                     return false;
                                 }
                             }
+                            else
+                            {
+                                Console.Error.WriteLine("Failed retrieving reportId {0}", rt.reportId); 
+                                rt.isRead = true;
+                            }
+                        }
+                        else
+                        {
+                            if (token.debug && token.verbosity > 0) { Console.WriteLine("Waiting for reportId {0}", rt.reportId); }
                         }
                     }
                 }

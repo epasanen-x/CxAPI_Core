@@ -20,6 +20,8 @@ namespace CxAPI_Core
     {
         public static bool debug;
         public static int level;
+        public static resultClass token;
+        
     }
 
 }

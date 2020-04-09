@@ -1031,7 +1031,7 @@ namespace CxSDKWebService
         SSH = 2,
         
         [System.Runtime.Serialization.EnumMemberAttribute()]
-        credentialServer = 3,
+        PasswordServer = 3,
     }
     
     [System.CodeDom.Compiler.GeneratedCodeAttribute("dotnet-svcutil", "1.0.0.1")]
@@ -1323,7 +1323,7 @@ namespace CxSDKWebService
         
         private bool ShowSaaSPackageDetailsField;
         
-        private bool IsAdviseChangecredentialField;
+        private bool IsAdviseChangePasswordField;
         
         private bool IsAllowedToManageITSServersField;
         
@@ -1644,15 +1644,15 @@ namespace CxSDKWebService
         }
         
         [System.Runtime.Serialization.DataMemberAttribute(IsRequired=true, Order=24)]
-        public bool IsAdviseChangecredential
+        public bool IsAdviseChangePassword
         {
             get
             {
-                return this.IsAdviseChangecredentialField;
+                return this.IsAdviseChangePasswordField;
             }
             set
             {
-                this.IsAdviseChangecredentialField = value;
+                this.IsAdviseChangePasswordField = value;
             }
         }
         
@@ -4845,7 +4845,7 @@ namespace CxSDKWebService
         
         private int UserPreferedLanguageLCIDField;
         
-        private string credentialField;
+        private string PasswordField;
         
         private string JobTitleField;
         
@@ -4934,15 +4934,15 @@ namespace CxSDKWebService
         }
         
         [System.Runtime.Serialization.DataMemberAttribute(EmitDefaultValue=false, Order=4)]
-        public string credential
+        public string Password
         {
             get
             {
-                return this.credentialField;
+                return this.PasswordField;
             }
             set
             {
-                this.credentialField = value;
+                this.PasswordField = value;
             }
         }
         
@@ -8974,6 +8974,7 @@ namespace CxSDKWebService
                 result.ReaderQuotas = System.Xml.XmlDictionaryReaderQuotas.Max;
                 result.MaxReceivedMessageSize = int.MaxValue;
                 result.AllowCookies = true;
+                result.Security.Mode = System.ServiceModel.BasicHttpSecurityMode.Transport;
                 return result;
             }
             if ((endpointConfiguration == EndpointConfiguration.CxSDKWebServiceSoap12))
@@ -8982,11 +8983,11 @@ namespace CxSDKWebService
                 System.ServiceModel.Channels.TextMessageEncodingBindingElement textBindingElement = new System.ServiceModel.Channels.TextMessageEncodingBindingElement();
                 textBindingElement.MessageVersion = System.ServiceModel.Channels.MessageVersion.CreateVersion(System.ServiceModel.EnvelopeVersion.Soap12, System.ServiceModel.Channels.AddressingVersion.None);
                 result.Elements.Add(textBindingElement);
-                System.ServiceModel.Channels.HttpTransportBindingElement httpBindingElement = new System.ServiceModel.Channels.HttpTransportBindingElement();
-                httpBindingElement.AllowCookies = true;
-                httpBindingElement.MaxBufferSize = int.MaxValue;
-                httpBindingElement.MaxReceivedMessageSize = int.MaxValue;
-                result.Elements.Add(httpBindingElement);
+                System.ServiceModel.Channels.HttpsTransportBindingElement httpsBindingElement = new System.ServiceModel.Channels.HttpsTransportBindingElement();
+                httpsBindingElement.AllowCookies = true;
+                httpsBindingElement.MaxBufferSize = int.MaxValue;
+                httpsBindingElement.MaxReceivedMessageSize = int.MaxValue;
+                result.Elements.Add(httpsBindingElement);
                 return result;
             }
             throw new System.InvalidOperationException(string.Format("Could not find endpoint with name \'{0}\'.", endpointConfiguration));
@@ -8996,11 +8997,11 @@ namespace CxSDKWebService
         {
             if ((endpointConfiguration == EndpointConfiguration.CxSDKWebServiceSoap))
             {
-                return new System.ServiceModel.EndpointAddress("http://192.168.250.4/cxwebinterface/SDK/CxSDKWebService.asmx");
+                return new System.ServiceModel.EndpointAddress("https://cxprivatecloud.checkmarx.net/CxWebInterface/SDK/CxSDKWebService.asmx");
             }
             if ((endpointConfiguration == EndpointConfiguration.CxSDKWebServiceSoap12))
             {
-                return new System.ServiceModel.EndpointAddress("http://192.168.250.4/cxwebinterface/SDK/CxSDKWebService.asmx");
+                return new System.ServiceModel.EndpointAddress("https://cxprivatecloud.checkmarx.net/CxWebInterface/SDK/CxSDKWebService.asmx");
             }
             throw new System.InvalidOperationException(string.Format("Could not find endpoint with name \'{0}\'.", endpointConfiguration));
         }
