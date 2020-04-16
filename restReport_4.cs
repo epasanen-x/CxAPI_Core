@@ -446,8 +446,15 @@ namespace CxAPI_Core
         public bool waitForResult(List<ReportTrace> trace, getScanResults scanResults, List<ReportResultAll> resultNew, Dictionary<DateTimeOffset, Dictionary<long, Dictionary<string, ReportResultExtended>>> extendedScan, Dictionary<long, ReportStaging> end, Dictionary<long, List<ReportResultAll>> last)
         {
             bool waitFlag = false;
+            DateTime wait_expired = DateTime.UtcNow;
             while (!waitFlag)
             {
+                if (wait_expired.AddMinutes(3) < DateTime.UtcNow)
+                {
+                    Console.Error.WriteLine("waitForResult timeout! {0}", getTimeOutObjects(trace));
+                    break;
+                }
+
                 if (token.debug && token.verbosity > 0) { Console.WriteLine("Sleeping 3 second(s)"); }
                 Thread.Sleep(3000);
 
@@ -475,10 +482,15 @@ namespace CxAPI_Core
                                     rt.isRead = true;
                                     getlastReport(result, end, last);
                                 }
+                                else
+                                {
+                                    rt.isRead = true;
+                                    Console.Error.WriteLine("Failed processing reportId {0}", rt.reportId);
+                                }
                             }
                             else
                             {
-                                Console.Error.WriteLine("Failed retrieving reportId {0}", rt.reportId); 
+                                Console.Error.WriteLine("Failed retrieving reportId {0}", rt.reportId);
                                 rt.isRead = true;
                             }
                         }
@@ -498,6 +510,16 @@ namespace CxAPI_Core
             if (state == 2) { return "Confirmed"; }
 
             return "Other";
+        }
+
+        private string getTimeOutObjects(List<ReportTrace> trace)
+        {
+            string result = String.Empty;
+            foreach (ReportTrace rt in trace)
+            {
+                result += String.Format("ProjectName {0}, ScanId {1}, TimeStamp {2}, isRead {3}", rt.projectName, rt.scanId, rt.TimeStamp, rt.isRead) + Environment.NewLine; 
+            }
+            return result;
         }
 
         private bool isUniqueInProject(List<DateTimeOffset> dates, long projectId, string uniqueKey, Dictionary<DateTimeOffset, Dictionary<long, Dictionary<string, ReportResultExtended>>> extendedScan)

@@ -15,15 +15,29 @@ namespace CxAPI_Core
 
         public static IConfigurationRoot configuration(string[] args)
         {
-         
             IConfigurationBuilder builder = new ConfigurationBuilder()
             .SetBasePath(System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location))
+             .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+             .AddCommandLine(args);
+            _keys = args;
+
+            _configuration = builder.Build();
+
+
+            return _configuration;
+        }
+        public static IConfigurationRoot configuration(string[] args, string path)
+        {
+            string set_path = String.IsNullOrEmpty(path) ? System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location) : path;
+
+            IConfigurationBuilder builder = new ConfigurationBuilder()
+            .SetBasePath(set_path)
             .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
             .AddCommandLine(args);
             _keys = args;
 
             _configuration = builder.Build();
-           
+
 
             return _configuration;
         }
@@ -43,12 +57,15 @@ namespace CxAPI_Core
             _configuration.GetSection("CxRest").Bind(_settings);
             return _settings;
         }
-            
-            public static resultClass mono_command_args()
+
+        public static resultClass mono_command_args(string[] args)
         {
             resultClass token = new resultClass();
+            List<string> extra;
 
             var p = new OptionSet() {
+                { "a|appsettings=", "Optional, point to alternate appsettings directory",
+                  v => token.appsettings = v },
                 { "t|get_token", "Fetch the bearer token from the CxSAST service",
                   v => token.api_action = api_action.getToken },
                 { "c|store_credentials", "Store username and credential in an encrypted file",
@@ -56,7 +73,7 @@ namespace CxAPI_Core
                 { "s|scan_results", "Get scan results, filtered by time and project",
                   v => token.api_action = api_action.scanResults },
                 { "rn|report_name=", "Select desired report",
-                  v => token.report_name= v },
+                  v => token.report_name = v },
                 { "pn|project_name=", "Filter with project name, Will return project if any portion of the project name is a match",
                   v => token.project_name = v },
                 { "tn|team_name=", "Filter with team name, Will return a team if any portion of the team name is a match",
@@ -86,19 +103,19 @@ namespace CxAPI_Core
                 { "?|h|help",  "show you your options",
                   v => token.api_action = api_action.help},
             };
-            settingClass _settings = get_settings();
-            token.save_result_filename = String.IsNullOrEmpty(token.save_result_filename) ? _settings.CxResultFileName : token.save_result_filename;
-            token.save_result_path = String.IsNullOrEmpty(token.save_result_path) ? _settings.CxResultFilePath : token.save_result_path;
-            token.file_name = String.IsNullOrEmpty(token.file_name) ? _settings.CxDefaultFileName : token.file_name;
-            token.file_path = String.IsNullOrEmpty(token.file_path) ? _settings.CxFilePath : token.file_path;
-
-            List<string> extra;
             try
             {
-                extra = p.Parse(_keys);
+                extra = p.Parse(args);
+                token._setresultClass();
+                Configuration.configuration(args, token.appsettings);
+                settingClass _settings = get_settings();
+                token.save_result_filename = String.IsNullOrEmpty(token.save_result_filename) ? _settings.CxResultFileName : token.save_result_filename;
+                token.save_result_path = String.IsNullOrEmpty(token.save_result_path) ? _settings.CxResultFilePath : token.save_result_path;
+                token.file_name = String.IsNullOrEmpty(token.file_name) ? _settings.CxDefaultFileName : token.file_name;
+                token.file_path = String.IsNullOrEmpty(token.file_path) ? _settings.CxFilePath : token.file_path;
             }
- 
-           // if (String.IsNullOrEmpty(token.file_name) ? _configuration
+
+            // if (String.IsNullOrEmpty(token.file_name) ? _configuration
             catch (OptionException e)
             {
                 Console.Write("CxApi_Core: ");

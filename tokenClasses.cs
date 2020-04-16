@@ -39,6 +39,7 @@ namespace CxAPI_Core
         public string save_result { get; set; }
         public string op_result { get; set; }
         public byte[] byte_result { get; set; }
+        public string appsettings { get; set; }
         public DateTime? start_time { get; set; }
         public DateTime? end_time { get; set; }
         public string session_id { get; set; }
@@ -54,6 +55,13 @@ namespace CxAPI_Core
 
         public resultClass()
         {
+            debug = false;
+            api_action = api_action.help;
+            _setresultClass();
+        }
+
+        public void _setresultClass()
+        {
             secure secure = new secure();
             settingClass settings = secure.get_settings();
 
@@ -62,14 +70,8 @@ namespace CxAPI_Core
             client_id = settings.client_id;
             client_secret = settings.client_secret;
             CxUrl = settings.CxUrl;
-            file_name = settings.CxDefaultFileName;
-            file_path = settings.CxFilePath;
             timestamp = DateTime.UtcNow;
-            start_time = null;
-            end_time = null;
-            api_action = api_action.help;
             os_path = secure._os.Contains("Windows") ? "\\" : "/";
-            debug = false;
             CxAPIResolver = CxUrl + settings.CxAPIResolver;
             CxSDKWebService = CxUrl + settings.CxSDKWebService;
           

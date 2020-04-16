@@ -12,10 +12,9 @@ namespace CxAPI_Core
         {
             try
             {
-                Configuration.configuration(args);
                 dispatcher dsp = new dispatcher();
 
-                resultClass token = dsp.dispatch();
+                resultClass token = dsp.dispatch(args);
                 Console.WriteLine("CxAPI_Core processing completed {0}", DateTime.UtcNow);
                 if (_options.debug)
                 {

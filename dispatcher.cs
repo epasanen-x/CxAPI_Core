@@ -8,9 +8,9 @@ namespace CxAPI_Core
 {
     class dispatcher
     {
-        public resultClass dispatch()
+        public resultClass dispatch(string[] args)
         {
-            resultClass token = Configuration.mono_command_args();
+            resultClass token = Configuration.mono_command_args(args);
             fetchToken newtoken = new fetchToken();
             if (token.status != 0) { return token; }
             secure secure = new secure(token);

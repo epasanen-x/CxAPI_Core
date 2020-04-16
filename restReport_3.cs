@@ -328,10 +328,17 @@ namespace CxAPI_Core
         private bool fetchReports(List<ReportTrace> trace,getScanResults scanResults, Dictionary<long, Dictionary<DateTime, Dictionary<string, ReportResultExtended>>> fix, Dictionary<string, ReportResultExtended> resultAll,List<ReportResultExtended> report_output)
         {
             bool waitFlag = false;
-            ConsoleSpinner spinner = new ConsoleSpinner();
+            //ConsoleSpinner spinner = new ConsoleSpinner();
+            DateTime wait_expired = DateTime.UtcNow;
+
             while (!waitFlag)
             {
-                spinner.Turn();
+                //spinner.Turn();
+                if (wait_expired.AddMinutes(3) < DateTime.UtcNow)
+                {
+                    Console.Error.WriteLine("waitForResult timeout! {0}", getTimeOutObjects(trace));
+                    break;
+                }
                 waitFlag = true;
                 if (token.debug && token.verbosity > 0) { Console.WriteLine("Sleeping 3 second(s)"); }
                 Thread.Sleep(3000);
@@ -359,7 +366,8 @@ namespace CxAPI_Core
                                 }
                                 else
                                 {
-                                    return false;
+                                    rt.isRead = true;
+                                    Console.Error.WriteLine("Failed processing reportId {0}", rt.reportId);
                                 }
                             }
                             else
@@ -377,6 +385,16 @@ namespace CxAPI_Core
             }
             return true;
         }
+        private string getTimeOutObjects(List<ReportTrace> trace)
+        {
+            string result = String.Empty;
+            foreach (ReportTrace rt in trace)
+            {
+                result += String.Format("ProjectName {0}, ScanId {1}, TimeStamp {2}, isRead {3}", rt.projectName, rt.scanId, rt.TimeStamp, rt.isRead) + Environment.NewLine;
+            }
+            return result;
+        }
+
         public bool matchProjectandTeam(ScanObject s, List<Teams> teams)
         {
             bool result = false;
