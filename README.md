@@ -1,4 +1,4 @@
-Go into the new directory and open appsettings.json in a test editor. You will see the following:  
+Go into the new directory and open appsettings.json in a test editor. You will see the following:    
 ```javascript
 { "Logging": { "LogLevel": { "Default": "Warning" } },
  "CxRest":
