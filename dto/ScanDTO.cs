@@ -6,6 +6,45 @@ using System.Globalization;
 namespace CxAPI_Core.dto
 {
 
+    public partial class ScanSettings
+    {
+        public EmailNotifications emailNotifications { get; set; }
+        public EngineConfiguration engineConfiguration { get; set; }
+        public PostScanAction postScanAction { get; set; }
+        public Preset preset { get; set; }
+        public Project project { get; set; }
+
+        public class EmailNotifications
+        {
+            public string afterScan { get; set; }
+            public string beforeScan { get; set; }
+            public string failedScan { get; set; }
+        }
+
+        public class EngineConfiguration
+        {
+            public long id { get; set; }
+            public object Link { get; set; }
+        }
+
+        public class PostScanAction
+        {
+            public long id { get; set; }
+            public object link { get; set; }
+        }
+        public class Preset
+        {
+            public long id { get; set; }
+            public object link { get; set; }
+
+        }
+        public class Project
+        {
+            public long id { get; set; }
+            public object link { get; set; }
+
+        }
+    }
     public partial class Teams
     {
         public Guid id { get; set; }

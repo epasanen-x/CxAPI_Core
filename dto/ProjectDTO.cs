@@ -6,6 +6,17 @@ namespace CxAPI_Core.dto
 {
 
 
+
+    public class Presets
+    {
+        public long id { get; set; }
+        public object link { get; set; }
+        public string name { get; set; }
+        public string ownerName { get; set; }
+        public string queryIds { get; set; }
+
+    }
+
     public class SourceSettingsLink
     {
         public string type { get; set; }

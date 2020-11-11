@@ -1,25 +1,28 @@
-Go into the new directory and open appsettings.json in a test editor. You will see the following:    
+Go into the new directory and open appsettings.json in a test editor. You will see the following:
 ```javascript
-{ "Logging": { "LogLevel": { "Default": "Warning" } },
- "CxRest":
-	 { "CxUrl": "http://192.168.250.4",
-		 "CxAPIResolver": "/CxWebInterface/CxWSResolver.asmx", 
-		 "CxSDKWebService": "",
-		 "CxFilePath": "C:\",
-		 "CxDefaultFileName": "results.csv",
-		 "CxDataFilePath": ".\", 
-		 "CxDataFileName": "save.data",
-		 "grant_type": "password",
-		 "scope": "sast_rest_api",
-		 "client_id":
-		 "resource_owner_client", 
-		 "client_secret": "014DF517-39D1-4453-B7B3-9930C563627C",
-		 "project": "cxrestapi/projects", 
-		 "scan": "cxrestapi/scans", 
-		 "token": "cxrestapi/auth/identity/connect/token"
-	 }
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Warning"
+    }
+  },
+  "CxRest": {
+    "CxUrl": "http://192.168.250.4",
+    "CxAPIResolver": "/CxWebInterface/CxWSResolver.asmx",
+    "CxSDKWebService": "/CxWebinterface/SDK/CxSDKWebService.asmx",
+    "CxFilePath": "C:\\scans",
+    "CxDefaultFileName": "results.csv",
+    "CxDataFilePath": ".\\",
+    "CxDataFileName": "save.data",
+    "grant_type": "credential",
+    "scope": "sast_rest_api",
+    "client_id": "resource_owner_client",
+    "client_secret": "014DF517-39D1-4453-B7B3-9930C563627C",
+    "debug":  "false"
+  }
 }
 ```
+Testing......
 Change the CxUrl settings to point at your CxManager server. Set the CxFilePath to where you want to save your results. Set this to “.\” to use your current directory. Save this file.
 
 Then open a cmd window and type “cxAPI_Core”:

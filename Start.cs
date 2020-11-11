@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 
 
@@ -10,27 +11,32 @@ namespace CxAPI_Core
     {
         private static void Main(string[] args)
         {
+            dispatcher dsp = new dispatcher();
             try
             {
-                dispatcher dsp = new dispatcher();
-
+                Console.WriteLine("CxAPI_Core version 2.3.2");
                 resultClass token = dsp.dispatch(args);
-                Console.WriteLine("CxAPI_Core processing completed {0}", DateTime.UtcNow);
-                if (_options.debug)
+                if (token.debug)
+                {
+                    Console.WriteLine("Successful completion.");
+                }
+                dsp.Elapsed_Time();
+                if (token.test)
                 {
                     Console.ReadKey();
                 }
-
             }
             catch (Exception ex)
             {
-                Console.Error.WriteLine(ex.ToString());
-                if (_options.debug)
+                dsp.Elapsed_Time();
+                Console.WriteLine(ex.ToString());
+                if (_options.test)
                 {
                     Console.ReadKey();
                 }
             }
         }
+
     }
 
 }

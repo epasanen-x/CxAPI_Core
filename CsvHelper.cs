@@ -19,9 +19,9 @@ namespace CxAPI_Core
                     csv.WriteRecords(projectList);
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
-                Console.Error.Write(ex.ToString());
+                Console.Write(ex.ToString());
                 return -1;
             }
             return 0;
@@ -38,7 +38,7 @@ namespace CxAPI_Core
             }
             catch (Exception ex)
             {
-                Console.Error.Write(ex.ToString());
+                Console.Write(ex.ToString());
                 return -1;
             }
             return 0;
@@ -55,7 +55,7 @@ namespace CxAPI_Core
             }
             catch (Exception ex)
             {
-                Console.Error.Write(ex.ToString());
+                Console.Write(ex.ToString());
                 return -1;
             }
             return 0;
@@ -72,7 +72,7 @@ namespace CxAPI_Core
             }
             catch (Exception ex)
             {
-                Console.Error.Write(ex.ToString());
+                Console.Write(ex.ToString());
                 return -1;
             }
             return 0;
@@ -89,7 +89,24 @@ namespace CxAPI_Core
             }
             catch (Exception ex)
             {
-                Console.Error.Write(ex.ToString());
+                Console.Write(ex.ToString());
+                return -1;
+            }
+            return 0;
+        }
+        public int writeCVSFile(List<ReportLastScan> lastScans, resultClass token)
+        {
+            try
+            {
+                using (var writer = new StreamWriter(token.file_path + token.os_path + token.file_name))
+                using (var csv = new CsvWriter(writer))
+                {
+                    csv.WriteRecords(lastScans);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.Write(ex.ToString());
                 return -1;
             }
             return 0;
@@ -106,7 +123,7 @@ namespace CxAPI_Core
             }
             catch (Exception ex)
             {
-                Console.Error.Write(ex.ToString());
+                Console.Write(ex.ToString());
                 return -1;
             }
             return 0;
@@ -123,7 +140,7 @@ namespace CxAPI_Core
             }
             catch (Exception ex)
             {
-                Console.Error.Write(ex.ToString());
+                Console.Write(ex.ToString());
                 return -1;
             }
             return 0;

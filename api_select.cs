@@ -7,12 +7,12 @@ using System.Threading.Tasks;
 namespace CxAPI_Core
 {
     public enum api_action
-        {
-            storeCredentials,
-            getToken,
-            scanResults,
-            getProjects,
-            help
-        }
-    
+    {
+        storeCredentials,
+        getToken,
+        scanResults,
+        getProjects,
+        help
+    }
+
 }

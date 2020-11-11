@@ -10,7 +10,7 @@ namespace CxAPI_Core
 {
     class get
     {
-        public bool get_Http(resultClass token, string path)
+        public bool get_Http(resultClass token, string path, int timeout = 10)
         {
             token.status = -1;
             try
@@ -24,26 +24,21 @@ namespace CxAPI_Core
                 {
                     if (response.IsSuccessStatusCode)
                     {
-                        if (token.debug && token.verbosity > 0)
+                        if (token.debug)
                         {
-                            Console.WriteLine("Results found for {0}", path);
+                            Console.WriteLine("Results found");
                         }
-                        token.byte_result = response.Content.ReadAsByteArrayAsync().Result;
                         token.op_result = response.Content.ReadAsStringAsync().Result;
+
+                        token.status = 0;
+                        return true;
                     }
                     else
                     {
-                        Console.Error.WriteLine("Failure to find results {0}", path);
                         Console.Error.Write(response);
+                        return false;
                     }
 
-                    token.status = 0;
-                    return true;
-                }
-                else
-                {
-                    Console.Error.Write(response);
-                    return false;
                 }
             }
             catch (Exception ex)
@@ -72,20 +67,20 @@ namespace CxAPI_Core
                 {
                     if (result.IsSuccessStatusCode)
                     {
-                        if (token.debug && token.verbosity > 0)
+                        if (token.debug)
                         {
-                            Console.WriteLine("Results found for {0}", path);
+                            Console.WriteLine("Results found");
                         }
-
                         token.op_result = result.Content.ReadAsStringAsync().Result;
                         token.status = 0;
                         return true;
                     }
                     else
                     {
-                        Console.Error.WriteLine("Failure to find results {0}", path);
                         Console.Error.Write(result);
+                        return false;
                     }
+
                 }
             }
             catch (Exception ex)

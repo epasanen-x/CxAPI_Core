@@ -4,6 +4,32 @@ using System.Text;
 
 namespace CxAPI_Core.dto
 {
+
+    class ReportLastScan
+    {
+        public string Comment { get; set; }
+        public string EngineStartDate { get; set; }
+        public long FailedLOC { get; set; }
+        public long FileCount { get; set; }
+        public int High { get; set; }
+        public int Info { get; set; }
+        public long LOC { get; set; }
+        public string Languages { get; set; }
+        public int Low { get; set; }
+        public int Medium { get; set; }
+        public string Origin { get; set; }
+        public string Owner { get; set; }
+        public string Preset { get; set; }
+        public long ProjectId { get; set; }
+        public string ProjectName { get; set; }
+        public string ScanFinishDate { get; set; }
+        public long ScanId { get; set; }
+        public string ScanStartDate { get; set; }
+        public string ScanType { get; set; }
+        public string TeamName { get; set; }
+        public string isIncremental { get; set; }
+
+    }
     class ReportRequest
     {
         public string reportType { get; set; }

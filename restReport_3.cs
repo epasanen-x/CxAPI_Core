@@ -19,6 +19,8 @@ namespace CxAPI_Core
 
         public bool fetchReportsbyDate()
         {
+            if (token.debug && token.verbosity > 1) { Console.WriteLine("Running: {0}", token.report_name); }
+
             Dictionary<long, Dictionary<DateTime, Dictionary<string, ReportResultExtended>>> fix = new Dictionary<long, Dictionary<DateTime, Dictionary<string, ReportResultExtended>>>();
             List<ReportTrace> trace = new List<ReportTrace>();
             Dictionary<string, ReportResultExtended> resultAll = new Dictionary<string, ReportResultExtended>();
@@ -28,34 +30,39 @@ namespace CxAPI_Core
             Dictionary<long, ScanCount> scanCount = new Dictionary<long, ScanCount>();
             getScanResults scanResults = new getScanResults();
             getScans scans = new getScans();
-            List<ScanObject> scan = scans.getScan(token);
-            List<Teams> teams = scans.getTeams(token);
+            getProjects projects = new getProjects(token);
+            //List<ScanObject> scan = scans.getScan(token);
+            Dictionary<Guid, Teams> teams = projects.CxTeams;
+            List<ScanObject> scan = projects.filter_by_projects(token);
+            Dictionary<long, ScanStatistics> resultStatistics = projects.CxResultStatistics;
+
+            if (scan.Count == 0)
+            {
+                Console.Error.WriteLine("No scans were found, pleas check argumants and retry.");
+                return false;
+            }
             foreach (ScanObject s in scan)
             {
-                if ((s.DateAndTime != null) && (s.Status.Id == 7) && (s.DateAndTime.StartedOn > token.start_time) && (s.DateAndTime.StartedOn < token.end_time))
+                setCount(s.Project.Id, scanCount);
+
+                ReportResult result = scanResults.SetResultRequest(s.Id, "XML", token);
+                if (result != null)
                 {
-                    if (matchProjectandTeam(s,teams))
+                    trace.Add(new ReportTrace(s.Project.Id, s.Project.Name, teams[s.OwningTeamId].fullName, s.DateAndTime.StartedOn, s.Id, result.ReportId, "XML"));
+                    if (trace.Count % token.max_threads == 0)
                     {
-                        setCount(s.Project.Id, scanCount);
-
-                        ReportResult result = scanResults.SetResultRequest(s.Id, "XML", token);
-                        if (result != null)
-                        {
-                            trace.Add(new ReportTrace(s.Project.Id, s.Project.Name, scans.getFullName(teams, s.OwningTeamId), s.DateAndTime.StartedOn, s.Id, result.ReportId, "XML"));
-                            if (trace.Count % 5 == 0)
-                            {
-                                fetchReports(trace, scanResults, fix, resultAll, report_output);
-                                trace.Clear();
-                            }
-                        }
-
+                        fetchReports(trace, scanResults, fix, resultAll, report_output);
+                        trace.Clear();
                     }
                 }
+
             }
+
             fetchReports(trace, scanResults, fix, resultAll, report_output);
             trace.Clear();
 
             addFixed(fix, report_output);
+            if (token.debug) { Console.WriteLine("Processing data, number of rows: {0}", report_output.Count); }
             if (token.pipe)
             {
                 foreach (ReportResultExtended csv in report_output)
@@ -261,7 +268,7 @@ namespace CxAPI_Core
                         firstLine = line.Descendants("Code").FirstOrDefault().Value.ToString(),
                         queryId = Convert.ToInt64(query.Attribute("id").Value.ToString())
                     };
-                    string mix = String.Format("{0}-{1}-{2}-{3}-{4}",isfixed.projectId,isfixed.queryId,isfixed.lineNo,isfixed.column,isfixed.similarityId);
+                    string mix = String.Format("{0}-{1}-{2}-{3}-{4}", isfixed.projectId, isfixed.queryId, isfixed.lineNo, isfixed.column, isfixed.similarityId);
                     if (!fix.ContainsKey(isfixed.projectId))
                     {
                         fix.Add(isfixed.projectId, new Dictionary<DateTime, Dictionary<string, ReportResultExtended>>());
@@ -286,9 +293,14 @@ namespace CxAPI_Core
             }
             catch (Exception ex)
             {
-                Console.Error.WriteLine("Failure reading report ID: {0}", report_id);
+                Console.Error.WriteLine("Failure reading XML from scan: report ID: {0}", report_id);
                 Console.Error.WriteLine(ex.Message);
                 Console.Error.WriteLine(ex.StackTrace);
+                if (token.debug && token.verbosity > 1)
+                {
+                    Console.Error.WriteLine("Dumping XML:");
+                    Console.Error.Write(result.ToString());
+                }
                 return true;
             }
 
@@ -325,16 +337,17 @@ namespace CxAPI_Core
             return true;
         }
 
-        private bool fetchReports(List<ReportTrace> trace,getScanResults scanResults, Dictionary<long, Dictionary<DateTime, Dictionary<string, ReportResultExtended>>> fix, Dictionary<string, ReportResultExtended> resultAll,List<ReportResultExtended> report_output)
+        private bool fetchReports(List<ReportTrace> trace, getScanResults scanResults, Dictionary<long, Dictionary<DateTime, Dictionary<string, ReportResultExtended>>> fix, Dictionary<string, ReportResultExtended> resultAll, List<ReportResultExtended> report_output)
         {
             bool waitFlag = false;
             //ConsoleSpinner spinner = new ConsoleSpinner();
             DateTime wait_expired = DateTime.UtcNow;
 
+
             while (!waitFlag)
             {
                 //spinner.Turn();
-                if (wait_expired.AddMinutes(3) < DateTime.UtcNow)
+                if (wait_expired.AddMinutes(2) < DateTime.UtcNow)
                 {
                     Console.Error.WriteLine("waitForResult timeout! {0}", getTimeOutObjects(trace));
                     break;
@@ -344,10 +357,11 @@ namespace CxAPI_Core
                 Thread.Sleep(3000);
                 foreach (ReportTrace rt in trace)
                 {
+                    if (token.debug && token.verbosity > 0) { Console.WriteLine("Looping thru {0}, isRead {1}", rt.reportId, rt.isRead); }
                     if (!rt.isRead)
                     {
                         waitFlag = false;
-                        if (rt.TimeStamp.AddMinutes(2) < DateTime.UtcNow)
+                        if (rt.TimeStamp.AddMinutes(1) < DateTime.UtcNow)
                         {
                             Console.Error.WriteLine("ReportId/ScanId {0}/{1} timeout!", rt.reportId, rt.scanId);
                             rt.isRead = true;
@@ -357,6 +371,7 @@ namespace CxAPI_Core
                         if (scanResults.GetResultStatus(rt.reportId, token))
                         {
                             if (token.debug && token.verbosity > 0) { Console.WriteLine("Found report.Id {0}", rt.reportId); }
+                            Thread.Sleep(2000);
                             var result = scanResults.GetResult(rt.reportId, token);
                             if (result != null)
                             {
@@ -367,12 +382,17 @@ namespace CxAPI_Core
                                 else
                                 {
                                     rt.isRead = true;
+                                    if (token.debug && token.verbosity > 1)
+                                    {
+                                        Console.Error.WriteLine("Dumping XML:");
+                                        Console.Error.Write(result.ToString());
+                                    }
                                     Console.Error.WriteLine("Failed processing reportId {0}", rt.reportId);
                                 }
                             }
                             else
                             {
-                                Console.Error.WriteLine("Failed retrieving reportId {0}", rt.reportId); 
+                                Console.Error.WriteLine("Failed retrieving reportId {0}", rt.reportId);
                                 rt.isRead = true;
                             }
                         }

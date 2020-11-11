@@ -24,6 +24,8 @@ namespace CxAPI_Core
 
         public bool fetchReportsbyDate()
         {
+            if (token.debug && token.verbosity > 1) { Console.WriteLine("Running: {0}", token.report_name); }
+
             List<ReportTrace> trace = new List<ReportTrace>();
             List<ReportResultAll> resultNew = new List<ReportResultAll>();
             Dictionary<long, ReportStaging> start = new Dictionary<long, ReportStaging>();
@@ -33,35 +35,40 @@ namespace CxAPI_Core
             Dictionary<DateTimeOffset, Dictionary<long, Dictionary<string, ReportResultExtended>>> extendedScan = new Dictionary<DateTimeOffset, Dictionary<long, Dictionary<string, ReportResultExtended>>>();
             getScanResults scanResults = new getScanResults();
             getScans scans = new getScans();
-            List<Teams> teams = scans.getTeams(token);
-            List<ScanObject> scan = scans.getScan(token);
+            getProjects projects = new getProjects(token);
+            Dictionary<Guid, Teams> teams = projects.CxTeams;
+            // List<ScanObject> scan = scans.getScan(token);
+            List<ScanObject> scan = projects.filter_by_projects(token);
+            Dictionary<long, ScanStatistics> resultStatistics = projects.CxResultStatistics;
+            if (scan.Count == 0)
+            {
+                Console.Error.WriteLine("No scans were found, pleas check argumants and retry.");
+                return false;
+            }
+
             foreach (ScanObject s in scan)
             {
-                if ((s.DateAndTime != null) && (s.Status.Id == 7) && (s.DateAndTime.StartedOn > token.start_time) && (s.DateAndTime.StartedOn < token.end_time))
-                {
-                    if (matchProjectandTeam(s, teams))
-                    {
-                        setCount(s.Project.Id, scanCount);
-                        findFirstorLastScan(s.Project.Id, s, teams, start, true);
-                        findFirstorLastScan(s.Project.Id, s, teams, end, false);
+                setCount(s.Project.Id, scanCount);
+                findFirstorLastScan(s.Project.Id, s, resultStatistics[s.Id], teams, start, true);
+                findFirstorLastScan(s.Project.Id, s, resultStatistics[s.Id], teams, end, false);
 
-                        ReportResult result = scanResults.SetResultRequest(s.Id, "XML", token);
-                        if (result != null)
-                        {
-                            trace.Add(new ReportTrace(s.Project.Id, s.Project.Name, scans.getFullName(teams, s.OwningTeamId), s.DateAndTime.StartedOn, s.Id, result.ReportId, "XML"));
-                        }
-                        if (trace.Count % 5 == 0)
-                        {
-                            waitForResult(trace, scanResults, resultNew, extendedScan, end, last);
-                            trace.Clear();
-                        }
-                    }
+                ReportResult result = scanResults.SetResultRequest(s.Id, "XML", token);
+                if (result != null)
+                {
+                    trace.Add(new ReportTrace(s.Project.Id, s.Project.Name, teams[s.OwningTeamId].fullName, s.DateAndTime.StartedOn, s.Id, result.ReportId, "XML"));
+                }
+                if (trace.Count % token.max_threads == 0)
+                {
+                    waitForResult(trace, scanResults, resultNew, extendedScan, end, last);
+                    trace.Clear();
                 }
             }
+
             waitForResult(trace, scanResults, resultNew, extendedScan, end, last);
             trace.Clear();
 
             List<AgingOutput> reportOutputs = totalAllResults(extendedScan, end);
+            if (token.debug) { Console.WriteLine("Processing data, number of rows: {0}", reportOutputs.Count); }
             if (token.pipe)
             {
                 foreach (AgingOutput csv in reportOutputs)
@@ -331,8 +338,15 @@ namespace CxAPI_Core
             }
             catch (Exception ex)
             {
+                Console.Error.WriteLine("Failure reading XML from scan: report ID: {0}", report_id);
                 Console.Error.WriteLine(ex.Message);
-                return false;
+                Console.Error.WriteLine(ex.StackTrace);
+                if (token.debug && token.verbosity > 1)
+                {
+                    Console.Error.WriteLine("Dumping XML:");
+                    Console.Error.Write(result.ToString());
+                }
+                return true;
             }
 
         }
@@ -372,11 +386,11 @@ namespace CxAPI_Core
             return reportResults;
 
         }
-        private bool findFirstorLastScan(long projectId, ScanObject scan, List<Teams> teams, Dictionary<long, ReportStaging> keyValuePairs, bool operation)
+        private bool findFirstorLastScan(long projectId, ScanObject scan, ScanStatistics scanStatistics, Dictionary<Guid, Teams> teams, Dictionary<long, ReportStaging> keyValuePairs, bool operation)
         {
             getScans scans = new getScans();
 
-            string fullName = scans.getFullName(teams, scan.OwningTeamId);
+            string fullName = teams[scan.OwningTeamId].fullName;
 
             if (keyValuePairs.ContainsKey(scan.Project.Id))
             {
@@ -394,7 +408,6 @@ namespace CxAPI_Core
                 }
                 if (start)
                 {
-                    ScanStatistics scanStatistics = scans.getScansStatistics(scan.Id, token);
                     ReportStaging staging = new ReportStaging()
                     {
                         ProjectId = scan.Project.Id,
@@ -411,7 +424,6 @@ namespace CxAPI_Core
             }
             else
             {
-                ScanStatistics scanStatistics = scans.getScansStatistics(scan.Id, token);
                 keyValuePairs.Add(scan.Project.Id, new ReportStaging()
                 {
                     ProjectId = scan.Project.Id,
@@ -449,7 +461,7 @@ namespace CxAPI_Core
             DateTime wait_expired = DateTime.UtcNow;
             while (!waitFlag)
             {
-                if (wait_expired.AddMinutes(3) < DateTime.UtcNow)
+                if (wait_expired.AddMinutes(2) < DateTime.UtcNow)
                 {
                     Console.Error.WriteLine("waitForResult timeout! {0}", getTimeOutObjects(trace));
                     break;
@@ -473,6 +485,7 @@ namespace CxAPI_Core
                         if (scanResults.GetResultStatus(rt.reportId, token))
                         {
                             if (token.debug && token.verbosity > 0) { Console.WriteLine("Got status for reportId {0}", rt.reportId); }
+                            Thread.Sleep(2000);
                             var result = scanResults.GetResult(rt.reportId, token);
                             if (result != null)
                             {
@@ -486,7 +499,13 @@ namespace CxAPI_Core
                                 {
                                     rt.isRead = true;
                                     Console.Error.WriteLine("Failed processing reportId {0}", rt.reportId);
+                                    if (token.debug && token.verbosity > 1)
+                                    {
+                                        Console.Error.WriteLine("Dumping XML:");
+                                        Console.Error.Write(result.ToString());
+                                    }
                                 }
+
                             }
                             else
                             {
@@ -517,7 +536,7 @@ namespace CxAPI_Core
             string result = String.Empty;
             foreach (ReportTrace rt in trace)
             {
-                result += String.Format("ProjectName {0}, ScanId {1}, TimeStamp {2}, isRead {3}", rt.projectName, rt.scanId, rt.TimeStamp, rt.isRead) + Environment.NewLine; 
+                result += String.Format("ProjectName {0}, ScanId {1}, TimeStamp {2}, isRead {3}", rt.projectName, rt.scanId, rt.TimeStamp, rt.isRead) + Environment.NewLine;
             }
             return result;
         }

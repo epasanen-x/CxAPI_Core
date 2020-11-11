@@ -45,10 +45,20 @@ namespace CxAPI_Core
         public string session_id { get; set; }
         public string project_name { get; set; }
         public string team_name { get; set; }
+        public string preset { get; set; }
         public bool pipe { get; set; }
         public string os_path { get; set; }
         public bool debug { get; set; }
-        public int verbosity{ get; set; }
+        public bool test { get; set; }
+        public int verbosity { get; set; }
+        public int max_threads { get; set; }
+        public int max_scans { get; set; }
+        public bool use_proxy { get; set; }
+        public bool proxy_use_default { get; set; }
+        public string proxy_url { get; set; }
+        public string proxy_username { get; set; }
+        public string proxy_password { get; set; }
+        public string proxy_domain { get; set; }
         public string report_name { get; set; }
 
         List<ProjectObject> projectClass { get; set; }
@@ -57,7 +67,9 @@ namespace CxAPI_Core
         {
             debug = false;
             api_action = api_action.help;
-            _setresultClass();
+            max_threads = 5;
+            max_scans = 0;
+            test = false;
         }
 
         public void _setresultClass()
@@ -74,7 +86,10 @@ namespace CxAPI_Core
             os_path = secure._os.Contains("Windows") ? "\\" : "/";
             CxAPIResolver = CxUrl + settings.CxAPIResolver;
             CxSDKWebService = CxUrl + settings.CxSDKWebService;
-          
+            use_proxy = settings.use_proxy;
+            proxy_use_default = settings.proxy_use_default;
+            proxy_url = settings.proxy_url;
+
         }
 
     }
@@ -100,6 +115,7 @@ namespace CxAPI_Core
         public string CxAPIResolver { get; set; }
         public string CxSDKWebService { get; set; }
         public string CxFilePath { get; set; }
+        public string CxDefaultFilePath { get; set; }
         public string CxDefaultFileName { get; set; }
         public string CxDataFilePath { get; set; }
         public string CxDataFileName { get; set; }
@@ -112,8 +128,11 @@ namespace CxAPI_Core
         public string token { get; set; }
         public string project { get; set; }
         public string scans { get; set; }
+        public bool use_proxy { get; set; }
+        public bool proxy_use_default { get; set; }
+        public string proxy_url { get; set; }
         public string debug { get; set; }
-        
+
     }
     public class settingToken
     {
@@ -145,7 +164,7 @@ namespace CxAPI_Core
         public DateTime Last_Scan { get; set; }
         public int High { get; set; }
         public int Medium { get; set; }
-     
+
     }
 
     public class CxUsers
@@ -163,6 +182,5 @@ namespace CxAPI_Core
         public string teams { get; set; }
     }
 }
-
 
 
