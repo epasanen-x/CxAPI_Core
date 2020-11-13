@@ -15,7 +15,7 @@ namespace CxAPI_Core
             token.status = -1;
             try
             {
-                HttpClient client = new HttpClient();
+                HttpClient client = Configuration._HttpClient(token);
                 client.DefaultRequestHeaders.Accept.Clear();
                 client.DefaultRequestHeaders.Add("Accept", "application/json;v=1.0");
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token.bearer_token);
@@ -57,7 +57,7 @@ namespace CxAPI_Core
             token.status = -1;
             try
             {
-                HttpClient client = new HttpClient();
+                HttpClient client = Configuration._HttpClient(token);
                 client.DefaultRequestHeaders.Accept.Clear();
                 client.DefaultRequestHeaders.Add("Accept", "application/json;v=1.0");
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token.bearer_token);

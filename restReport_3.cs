@@ -32,7 +32,7 @@ namespace CxAPI_Core
             getScans scans = new getScans();
             getProjects projects = new getProjects(token);
             //List<ScanObject> scan = scans.getScan(token);
-            Dictionary<Guid, Teams> teams = projects.CxTeams;
+            Dictionary<string, Teams> teams = projects.CxTeams;
             List<ScanObject> scan = projects.filter_by_projects(token);
             Dictionary<long, ScanStatistics> resultStatistics = projects.CxResultStatistics;
 
@@ -110,7 +110,7 @@ namespace CxAPI_Core
                     XElement path = el.Descendants("Path").FirstOrDefault();
                     XElement pathNode = path.Descendants("PathNode").FirstOrDefault();
                     XElement snippet = pathNode.Descendants("Snippet").FirstOrDefault();
-                    XElement line = snippet.Descendants("Line").FirstOrDefault();
+                    XElement line = (snippet != null) ? snippet.Descendants("Line").FirstOrDefault() : null;
 
                     //long ResultId = Convert.ToInt64(path.Attribute("ResultId").Value.ToString());
                     //string key = "New-" + ResultId.ToString();
@@ -140,8 +140,9 @@ namespace CxAPI_Core
                             state = Convert.ToInt32(el.Attribute("state").Value.ToString()),
                             fileName = el.Attribute("FileName").Value.ToString(),
                             lineNo = Convert.ToInt32(el.Attribute("Line").Value.ToString()),
+
                             column = Convert.ToInt32(el.Attribute("Column").Value.ToString()),
-                            firstLine = line.Descendants("Code").FirstOrDefault().Value.ToString(),
+                            firstLine = (line != null) ? line.Descendants("Code").FirstOrDefault().Value.ToString() : "",
                             queryId = Convert.ToInt64(query.Attribute("id").Value.ToString())
                         };
                         response.Add(key, isnew);
@@ -159,7 +160,7 @@ namespace CxAPI_Core
                     XElement path = el.Descendants("Path").FirstOrDefault();
                     XElement pathNode = path.Descendants("PathNode").FirstOrDefault();
                     XElement snippet = pathNode.Descendants("Snippet").FirstOrDefault();
-                    XElement line = snippet.Descendants("Line").FirstOrDefault();
+                    XElement line = (snippet != null) ? snippet.Descendants("Line").FirstOrDefault() : null;
 
                     //long ResultId = Convert.ToInt64(path.Attribute("ResultId").Value.ToString());
                     //string key = "Recurring-" + ResultId.ToString();
@@ -190,7 +191,7 @@ namespace CxAPI_Core
                             fileName = el.Attribute("FileName").Value.ToString(),
                             lineNo = Convert.ToInt32(el.Attribute("Line").Value.ToString()),
                             column = Convert.ToInt32(el.Attribute("Column").Value.ToString()),
-                            firstLine = line.Descendants("Code").FirstOrDefault().Value.ToString(),
+                            firstLine = (line != null) ? line.Descendants("Code").FirstOrDefault().Value.ToString() : "",
                             queryId = Convert.ToInt64(query.Attribute("id").Value.ToString())
 
                         };
@@ -224,7 +225,7 @@ namespace CxAPI_Core
                                 fileName = el.Attribute("FileName").Value.ToString(),
                                 lineNo = Convert.ToInt32(el.Attribute("Line").Value.ToString()),
                                 column = Convert.ToInt32(el.Attribute("Column").Value.ToString()),
-                                firstLine = line.Descendants("Code").FirstOrDefault().Value.ToString(),
+                                firstLine = (line != null) ? line.Descendants("Code").FirstOrDefault().Value.ToString() : "",
                                 queryId = Convert.ToInt64(query.Attribute("id").Value.ToString())
 
                             };
@@ -242,7 +243,7 @@ namespace CxAPI_Core
                     XElement path = el.Descendants("Path").FirstOrDefault();
                     XElement pathNode = path.Descendants("PathNode").FirstOrDefault();
                     XElement snippet = pathNode.Descendants("Snippet").FirstOrDefault();
-                    XElement line = snippet.Descendants("Line").FirstOrDefault();
+                    XElement line = (snippet != null) ? snippet.Descendants("Line").FirstOrDefault() : null;
                     long SimilarityId = Convert.ToInt64(path.Attribute("SimilarityId").Value.ToString());
                     ReportResultExtended isfixed = new ReportResultExtended()
                     {
@@ -265,7 +266,7 @@ namespace CxAPI_Core
                         fileName = el.Attribute("FileName").Value.ToString(),
                         lineNo = Convert.ToInt32(el.Attribute("Line").Value.ToString()),
                         column = Convert.ToInt32(el.Attribute("Column").Value.ToString()),
-                        firstLine = line.Descendants("Code").FirstOrDefault().Value.ToString(),
+                        firstLine = (line != null) ? line.Descendants("Code").FirstOrDefault().Value.ToString() : "",
                         queryId = Convert.ToInt64(query.Attribute("id").Value.ToString())
                     };
                     string mix = String.Format("{0}-{1}-{2}-{3}-{4}", isfixed.projectId, isfixed.queryId, isfixed.lineNo, isfixed.column, isfixed.similarityId);

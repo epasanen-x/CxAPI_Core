@@ -31,7 +31,7 @@ namespace CxAPI_Core
             getProjects projects = new getProjects(token);
 
             //List<ScanObject> scan = scans.getScan(token);
-            Dictionary<Guid, Teams> teams = projects.CxTeams;
+            Dictionary<string, Teams> teams = projects.CxTeams;
             List<ScanObject> scan = projects.filter_by_projects(token);
             Dictionary<long, ScanStatistics> resultStatistics = projects.CxResultStatistics;
             getScanResults scanResults = new getScanResults();

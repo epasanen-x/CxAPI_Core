@@ -16,9 +16,9 @@ namespace CxAPI_Core.dto
 
         public class EmailNotifications
         {
-            public string afterScan { get; set; }
-            public string beforeScan { get; set; }
-            public string failedScan { get; set; }
+            public object afterScan { get; set; }
+            public object beforeScan { get; set; }
+            public object failedScan { get; set; }
         }
 
         public class EngineConfiguration
@@ -45,11 +45,20 @@ namespace CxAPI_Core.dto
 
         }
     }
+ //   public partial class Teams
+ //   {
+//        public Guid id { get; set; }
+//        public string fullName { get; set; }
+//    }
+
     public partial class Teams
     {
-        public Guid id { get; set; }
+        public string id { get; set; }
+        public string name { get; set; }
         public string fullName { get; set; }
+        public long parentId { get; set; }
     }
+
 
     public partial class ScanObject
     {
@@ -64,7 +73,7 @@ namespace CxAPI_Core.dto
         public string Owner { get; set; }
         public string Origin { get; set; }
         public string InitiatorName { get; set; }
-        public Guid OwningTeamId { get; set; }
+        public string OwningTeamId { get; set; }
         public bool IsPublic { get; set; }
         public bool IsLocked { get; set; }
         public bool IsIncremental { get; set; }

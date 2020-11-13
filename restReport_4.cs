@@ -36,7 +36,7 @@ namespace CxAPI_Core
             getScanResults scanResults = new getScanResults();
             getScans scans = new getScans();
             getProjects projects = new getProjects(token);
-            Dictionary<Guid, Teams> teams = projects.CxTeams;
+            Dictionary<string, Teams> teams = projects.CxTeams;
             // List<ScanObject> scan = scans.getScan(token);
             List<ScanObject> scan = projects.filter_by_projects(token);
             Dictionary<long, ScanStatistics> resultStatistics = projects.CxResultStatistics;
@@ -288,7 +288,7 @@ namespace CxAPI_Core
                     //IEnumerable<XElement> allNode = path.Descendants("PathNode").Elements();
                     XElement lastNode = path.Descendants("PathNode").LastOrDefault();
                     XElement snippet = pathNode.Descendants("Snippet").FirstOrDefault();
-                    XElement line = snippet.Descendants("Line").FirstOrDefault();
+                    XElement line = (snippet != null) ? snippet.Descendants("Line").FirstOrDefault() : null;
                     long SimilarityId = Convert.ToInt64(path.Attribute("SimilarityId").Value.ToString());
                     ReportResultExtended isfixed = new ReportResultExtended()
                     {
@@ -312,7 +312,7 @@ namespace CxAPI_Core
                         fileName = el.Attribute("FileName").Value.ToString(),
                         lineNo = Convert.ToInt32(el.Attribute("Line").Value.ToString()),
                         column = Convert.ToInt32(el.Attribute("Column").Value.ToString()),
-                        firstLine = line.Descendants("Code").FirstOrDefault().Value.ToString(),
+                        firstLine = (line != null) ? line.Descendants("Code").FirstOrDefault().Value.ToString(): "",
                         nodeName = pathNode.Descendants("Name").FirstOrDefault().Value.ToString(),
                         queryId = Convert.ToInt64(query.Attribute("id").Value.ToString()),
                         remark = el.Attribute("Remark").Value.ToString(),
@@ -386,7 +386,7 @@ namespace CxAPI_Core
             return reportResults;
 
         }
-        private bool findFirstorLastScan(long projectId, ScanObject scan, ScanStatistics scanStatistics, Dictionary<Guid, Teams> teams, Dictionary<long, ReportStaging> keyValuePairs, bool operation)
+        private bool findFirstorLastScan(long projectId, ScanObject scan, ScanStatistics scanStatistics, Dictionary<string, Teams> teams, Dictionary<long, ReportStaging> keyValuePairs, bool operation)
         {
             getScans scans = new getScans();
 

@@ -49,6 +49,8 @@ namespace CxAPI_Core
         }
         public static IConfigurationRoot configuration()
         {
+            if (_configuration != null) return _configuration;
+
             Console.WriteLine(@"Using executable path configuration {0}", System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location));
             IConfigurationBuilder builder = new ConfigurationBuilder()
             .SetBasePath(System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location))

@@ -14,7 +14,7 @@ namespace CxAPI_Core
             dispatcher dsp = new dispatcher();
             try
             {
-                Console.WriteLine("CxAPI_Core version 2.3.2");
+                Console.WriteLine("CxAPI_Core version 2.3.5");
                 resultClass token = dsp.dispatch(args);
                 if (token.debug)
                 {

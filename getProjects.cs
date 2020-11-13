@@ -13,7 +13,7 @@ namespace CxAPI_Core
     {
         public List<ScanObject> CxScans;
         public List<ProjectObject> CxProjects;
-        public Dictionary<Guid, Teams> CxTeams;
+        public Dictionary<string, Teams> CxTeams;
         public Dictionary<long, Presets> CxPresets;
         public Dictionary<long, ScanSettings> CxSettings;
         public Dictionary<long, ScanStatistics> CxResultStatistics;
@@ -84,10 +84,10 @@ namespace CxAPI_Core
             return CxScans;
         }
 
-        public Dictionary<Guid, Teams> get_team_list(resultClass token)
+        public Dictionary<string, Teams> get_team_list(resultClass token)
         {
             getScans scans = new getScans();
-            Dictionary<Guid, Teams> result = new Dictionary<Guid, Teams>();
+            Dictionary<string, Teams> result = new Dictionary<string, Teams>();
             List<Teams> tclass = scans.getTeams(token);
             foreach (Teams t in tclass)
             {

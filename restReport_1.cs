@@ -130,7 +130,15 @@ namespace CxAPI_Core
                     else if (result.state == 2) { report.Confirmed++; }
                 }
                 //report.TeamName = first.TeamName;
-                string[] split = first.TeamName.Split('\\');
+                string[] split;
+                if (first.TeamName.Contains('\\'))
+                {
+                    split = first.TeamName.Split('\\');
+                }
+                else
+                {
+                    split = first.TeamName.Split('/');
+                }
                 if (split.Length > 1)
                 {
                     report.company = split[split.Length - 2];
@@ -320,7 +328,7 @@ namespace CxAPI_Core
                             rt.isRead = true;
                             continue;
                         }
-                            if (scanResults.GetResultStatus(rt.reportId, token))
+                        if (scanResults.GetResultStatus(rt.reportId, token))
                         {
                             if (token.debug && token.verbosity > 0) { Console.WriteLine("Got status for reportId {0}", rt.reportId); }
                             var result = scanResults.GetResult(rt.reportId, token);

@@ -41,7 +41,7 @@ namespace CxAPI_Core
                 Console.Error.WriteLine("No scans were found, please check argumants and retry.");
                 return false;
             }
-            Dictionary<Guid, Teams> teams = projects.CxTeams;
+            Dictionary<string, Teams> teams = projects.CxTeams;
             Dictionary<long, ScanSettings> settings = projects.CxSettings;
             Dictionary<long, ScanStatistics> resultStatistics = projects.CxResultStatistics;
             Dictionary<long, Presets> presets = projects.CxPresets;
@@ -64,7 +64,7 @@ namespace CxAPI_Core
             return true;
         }
 
-        public List<ReportLastScan> reportLastScan(resultClass token, List<ScanObject> scans, Dictionary<Guid, Teams> allTeams, Dictionary<long, ScanStatistics> scannedStatistics,Dictionary<long,ScanSettings> settings, Dictionary<long,Presets> presets)
+        public List<ReportLastScan> reportLastScan(resultClass token, List<ScanObject> scans, Dictionary<string, Teams> allTeams, Dictionary<long, ScanStatistics> scannedStatistics,Dictionary<long,ScanSettings> settings, Dictionary<long,Presets> presets)
         {
             List<ReportLastScan> reportScan = new List<ReportLastScan>();
             foreach (ScanObject scan in scans)

@@ -179,6 +179,7 @@ namespace CxAPI_Core
                 path = token_secure.get_rest_Uri(String.Format(CxConstant.CxScanSettings, projectId));
                 if (token.debug && token.verbosity > 1) { Console.WriteLine("API: {0}", path); }
                 httpGet.get_Http(token, path, 10);
+                
                 if (token.status == 0)
                 {
                     sclass = JsonConvert.DeserializeObject<ScanSettings>(token.op_result);
@@ -260,7 +261,7 @@ namespace CxAPI_Core
             return tclass;
         }
 
-        public string getFullName(List<Teams> teams, Guid id)
+        public string getFullName(List<Teams> teams, string id)
         {
             string result = String.Empty;
             foreach (Teams team in teams)
