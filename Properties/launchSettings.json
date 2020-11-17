@@ -2,7 +2,7 @@
   "profiles": {
     "CxAPI_Core": {
       "commandName": "Project",
-      "commandLineArgs": "--scan_results --debug --appsettings=c:\\scripts\\appsettings-test.json --report_name=REST_REPORT_5 --start_time=01/01/2018 --end_time=01/01/2021  --verbose=1 --file_name=report_5.csv"
+      "commandLineArgs": "--store_credentials --appsettings=c:\\scripts\\appsettings-test.json --user_name admin --password \"!BongoFury1976\""
     }
   }
 }

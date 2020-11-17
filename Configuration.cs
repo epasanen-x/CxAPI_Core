@@ -6,6 +6,7 @@ using Mono.Options;
 using System.Net.Http;
 using System.Net;
 using System.Runtime.InteropServices;
+using System.Reflection;
 
 namespace CxAPI_Core
 {
@@ -57,6 +58,13 @@ namespace CxAPI_Core
             .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
             _configuration = builder.Build();
             return _configuration;
+        }
+
+        public static string getVersion()
+        {
+            Assembly assembly = Assembly.Load("CxApi_Core");
+            Version ver = assembly.GetName().Version;
+            return "Version: " + ver.Major.ToString() + "." + ver.Minor.ToString() + "." + ver.Revision.ToString() + " build (" + ver.Build.ToString() + ")";
         }
 
         public static settingClass get_settings()

@@ -194,11 +194,11 @@ namespace CxAPI_Core
             string folder = _os.Contains("Windows") ? "\\" : "/";
             try
             {
-                settingClass settings = get_settings();
                 string Json_string = Newtonsoft.Json.JsonConvert.SerializeObject(encrypt);
                 string encrypted = _cipherService.Encrypt(Json_string);
-                if (_debug && _token.verbosity > 1) Console.WriteLine("Setting file: {0} : {1}", settings.CxDataFilePath, settings.CxDataFileName);
-                string path = Path.Combine(settings.CxDataFilePath, settings.CxDataFileName);
+                if (_debug && _token.verbosity > 1) Console.WriteLine("Setting file: {0} : {1}", _settings.CxDataFilePath, _settings.CxDataFileName);
+                //                string path = Path.Combine(settings.CxDataFilePath, settings.CxDataFileName);
+                string path = _settings.CxDataFilePath + folder + _settings.CxDataFileName;
                 File.WriteAllText(path, encrypted);
                 return true;
             }
@@ -211,10 +211,12 @@ namespace CxAPI_Core
         }
         public encryptClass get_decrypted_file()
         {
+            string folder = _os.Contains("Windows") ? "\\" : "/";
             try
             {
                 if (_debug && _token.verbosity > 1) { Console.WriteLine("Debug settings: {0} : {1}", _settings.CxDataFilePath, _settings.CxDataFileName); }
-                string path = Path.Combine(_settings.CxDataFilePath, _settings.CxDataFileName);
+                //                string path = Path.Combine(_settings.CxDataFilePath, _settings.CxDataFileName);
+                string path = _settings.CxDataFilePath + folder + _settings.CxDataFileName;
                 string encrypted = File.ReadAllText(path);
                 encryptClass encrypt = Newtonsoft.Json.JsonConvert.DeserializeObject<encryptClass>(_cipherService.Decrypt(encrypted));
                 return encrypt;
