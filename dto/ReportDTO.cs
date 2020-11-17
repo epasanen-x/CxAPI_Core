@@ -119,6 +119,46 @@ namespace CxAPI_Core.dto
         public string Group { get; set; }
         public string Query { get; set; }
     }
+
+    public partial class ReportResultMaxQueries
+    {
+        public string Project_Name { get; set; }
+        public string Team_Name { get; set; }
+        public string Preset_Name { get; set; }
+        public DateTime Scan_Date { get; set; }
+        public long Project_Id { get; set; }
+        public long Scan_Id { get; set; }
+        public string Languages { get; set; }
+        public string Query_1 { get; set; }
+        public string Group_1 { get; set; }
+        public string Severity_1 { get; set; }
+        public int Query_Count_1 { get; set; }
+        public int False_Positive_1 { get; set; }
+
+        public string Query_2 { get; set; }
+        public string Group_2 { get; set; }
+        public string Severity_2 { get; set; }
+        public int Query_Count_2 { get; set; }
+        public int False_Positive_2 { get; set; }
+
+        public string Query_3 { get; set; }
+        public string Group_3 { get; set; }
+        public string Severity_3 { get; set; }
+        public int Query_Count_3 { get; set; }
+        public int False_Positive_3 { get; set; }
+        public string Query_4 { get; set; }
+        public string Group_4 { get; set; }
+        public string Severity_4 { get; set; }
+        public int Query_Count_4 { get; set; }
+        public int False_Positive_4 { get; set; }
+        public string Query_5 { get; set; }
+        public string Group_5 { get; set; }
+        public string Severity_5 { get; set; }
+        public int Query_Count_5 { get; set; }
+        public int False_Positive_5 { get; set; }
+
+    }
+
     public partial class ReportResultAll
     {
         public string projectName { get; set; }
@@ -132,6 +172,10 @@ namespace CxAPI_Core.dto
         public string Severity { get; set; }
         public string Group { get; set; }
         public string Query { get; set; }
+        public long QueryId { get; set; }
+        public int QueryCount { get; set; }
+        public int NotExploitableCount { get; set; }
+
     }
     public partial class ReportResultExtended
     {

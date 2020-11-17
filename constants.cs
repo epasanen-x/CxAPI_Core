@@ -21,6 +21,7 @@ namespace CxAPI_Core
         public const string CxReportStatus = "/cxrestapi/reports/sastScan/{0}/status";
         public const string CxPresets = "/cxrestapi/sast/presets";
         public const string CxScanStatistics = "/cxrestapi/sast/scans/{0}/resultsStatistics";
+        public const string CxODATAScan = "/Cxwebinterface/odata/v1/Scans({0})";
     }
     static class _options
     {

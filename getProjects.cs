@@ -76,9 +76,9 @@ namespace CxAPI_Core
             return project_dictionary;
         }
 
-        public List<ScanObject> filter_by_projects(resultClass token)
+        public List<ScanObject> filter_by_projects(resultClass token, bool onlyOne = false)
         {
-            filter_scans(token, token.max_scans);
+            filter_scans(token, token.max_scans, onlyOne);
             teamId_in_scan(token, CxScans, token.team_name);
             presetId_in_scan(token, CxScans, token.preset);
             return CxScans;
@@ -114,16 +114,37 @@ namespace CxAPI_Core
             return result;
         }
 
-        public bool filter_scans(resultClass token, int max_scans)
+        public bool filter_scans(resultClass token, int max_scans, bool onlyOne = false)
         {
             getScans scans = new getScans();
             List<ScanObject> outScans = new List<ScanObject>();
             List<ScanObject> pscans = new List<ScanObject>();
+            Dictionary<long, ScanObject> lastOne = new Dictionary<long, ScanObject>();
 
             foreach (ProjectObject project in CxProjects)
             {
                 List<ScanObject> temp = (max_scans > 0) ? scans.getLastScanbyId(token, project.id, max_scans) : scans.getScanbyId(token, project.id);
-                pscans.AddRange(temp);
+                if (onlyOne)
+                {
+                    long topScan = 0;
+                    ScanObject topScanObject = null;
+                    foreach (ScanObject so in temp)
+                    {
+                        if (so.Id > topScan)
+                        {
+                            topScan = so.Id;
+                            topScanObject = so;
+                        }
+                    }
+                    if (topScanObject != null)
+                    {
+                        pscans.Add(topScanObject);
+                    }
+                }
+                else
+                {
+                    pscans.AddRange(temp);
+                }
             }
             foreach (ScanObject s in pscans)
             {
@@ -132,9 +153,10 @@ namespace CxAPI_Core
                     get_result_statistics(token, s.Id);
                     outScans.Add(s);
                 }
-
             }
+
             CxScans = outScans;
+
             return true;
         }
 
