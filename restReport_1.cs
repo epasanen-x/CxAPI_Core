@@ -25,31 +25,39 @@ namespace CxAPI_Core
             Dictionary<long, ReportStaging> end = new Dictionary<long, ReportStaging>();
             Dictionary<long, List<ReportResultAll>> last = new Dictionary<long, List<ReportResultAll>>();
             Dictionary<long, ScanCount> scanCount = new Dictionary<long, ScanCount>();
-            getScanResults scanResults = new getScanResults();
+            /*            getScanResults scanResults = new getScanResults();
+                        getScans scans = new getScans();
+                        List<Teams> teams = scans.getTeams(token);
+                        List<ScanObject> scan = scans.getScan(token);*/
             getScans scans = new getScans();
-            List<Teams> teams = scans.getTeams(token);
-            List<ScanObject> scan = scans.getScan(token);
+            getProjects projects = new getProjects(token);
+
+            //List<ScanObject> scan = scans.getScan(token);
+            Dictionary<string, Teams> teams = projects.CxTeams;
+            List<ScanObject> scan = projects.filter_by_projects(token);
+            Dictionary<long, ScanStatistics> resultStatistics = projects.CxResultStatistics;
+            getScanResults scanResults = new getScanResults();
+            if (scan.Count == 0)
+            {
+                Console.Error.WriteLine("No scans were found, pleas check argumants and retry.");
+                return false;
+            }
+
             foreach (ScanObject s in scan)
             {
-                if ((s.DateAndTime != null) && (s.Status.Id == 7) && (s.DateAndTime.StartedOn > token.start_time) && (s.DateAndTime.StartedOn < token.end_time))
-                {
-                    if (matchProjectandTeam(s, teams))
-                    {
-                        setCount(s.Project.Id, scanCount);
-                        findFirstorLastScan(s.Project.Id,  s, teams ,start, true);
-                        findFirstorLastScan(s.Project.Id, s, teams , end, false);
+                setCount(s.Project.Id, scanCount);
+                findFirstorLastScan(s.Project.Id, s, teams, start, true);
+                findFirstorLastScan(s.Project.Id, s, teams, end, false);
 
-                        ReportResult result = scanResults.SetResultRequest(s.Id, "XML", token);
-                        if (result != null)
-                        {
-                            trace.Add(new ReportTrace(s.Project.Id, s.Project.Name, scans.getFullName(teams, s.OwningTeamId), s.DateAndTime.StartedOn, s.Id, result.ReportId, "XML"));
-                        }
-                        if (trace.Count % 5 == 0)
-                        {
-                            waitForResult(trace, scanResults, resultNew, end, last);
-                            trace.Clear();
-                        }
-                    }
+                ReportResult result = scanResults.SetResultRequest(s.Id, "XML", token);
+                if (result != null)
+                {
+                    trace.Add(new ReportTrace(s.Project.Id, s.Project.Name, teams[s.OwningTeamId].fullName, s.DateAndTime.StartedOn, s.Id, result.ReportId, "XML"));
+                }
+                if (trace.Count % 5 == 0)
+                {
+                    waitForResult(trace, scanResults, resultNew, end, last);
+                    trace.Clear();
                 }
             }
             waitForResult(trace, scanResults, resultNew, end, last);
@@ -60,7 +68,7 @@ namespace CxAPI_Core
             {
                 foreach (ReportOutput csv in reportOutputs)
                 {
-                    Console.WriteLine("{0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},{12},{13},{14},{15},{16},{17},{18}", csv.ProjectName, csv.company,csv.team, csv.LastHigh, csv.LastMedium, csv.LastLow, csv.NewHigh, csv.NewMedium, csv.NewLow, csv.DiffHigh, csv.DiffMedium, csv.DiffLow, csv.NotExploitable, csv.Confirmed, csv.ToVerify, csv.firstScan, csv.lastScan, csv.ScanCount);
+                    Console.WriteLine("{0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},{12},{13},{14},{15},{16},{17},{18}", csv.ProjectName, csv.company, csv.team, csv.LastHigh, csv.LastMedium, csv.LastLow, csv.NewHigh, csv.NewMedium, csv.NewLow, csv.DiffHigh, csv.DiffMedium, csv.DiffLow, csv.NotExploitable, csv.Confirmed, csv.ToVerify, csv.firstScan, csv.lastScan, csv.ScanCount);
                 }
             }
             else
@@ -121,7 +129,7 @@ namespace CxAPI_Core
                             else if (result.Severity == "Medium") { report.NewMedium++; }
                             else if (result.Severity == "Low") { report.NewLow++; }
                         }
-                    }    
+                    }
                 }
                 foreach (ReportResultAll result in lastScanResults)
                 {
@@ -236,11 +244,11 @@ namespace CxAPI_Core
             return reportResults;
 
         }
-        private bool findFirstorLastScan(long projectId, ScanObject scan, List<Teams> teams, Dictionary<long, ReportStaging> keyValuePairs, bool operation)
+        private bool findFirstorLastScan(long projectId, ScanObject scan, Dictionary<string, Teams> teams, Dictionary<long, ReportStaging> keyValuePairs, bool operation)
         {
             getScans scans = new getScans();
 
-            string fullName = scans.getFullName(teams, scan.OwningTeamId);
+            string fullName = teams[scan.OwningTeamId].fullName;
 
             if (keyValuePairs.ContainsKey(scan.Project.Id))
             {
@@ -308,7 +316,7 @@ namespace CxAPI_Core
         }
 
 
-        public bool waitForResult(List<ReportTrace> trace, getScanResults scanResults, List<ReportResultAll> resultNew, Dictionary<long, ReportStaging> end ,Dictionary<long, List<ReportResultAll>> last )
+        public bool waitForResult(List<ReportTrace> trace, getScanResults scanResults, List<ReportResultAll> resultNew, Dictionary<long, ReportStaging> end, Dictionary<long, List<ReportResultAll>> last)
         {
             bool waitFlag = false;
             while (!waitFlag)

@@ -66,6 +66,10 @@ namespace CxAPI_Core
             Version ver = assembly.GetName().Version;
             return "Version: " + ver.Major.ToString() + "." + ver.Minor.ToString() + "." + ver.Revision.ToString() + " build (" + ver.Build.ToString() + ")";
         }
+        public static string getdotNet()
+        {
+            return "dotnet Version: " + Environment.Version.ToString();
+        }
 
         public static settingClass get_settings()
         {
@@ -122,6 +126,30 @@ namespace CxAPI_Core
                 return new HttpClient();
             }
         }
+
+        public static void debug_configuration(settingClass _settings, resultClass _token)
+        {
+            string _os = RuntimeInformation.OSDescription;
+            string folder = _os.Contains("Windows") ? "\\" : "/";
+            Console.WriteLine("-----------------------------------------------------------------------");
+            Console.WriteLine("Setting file: {0}", _settings.CxDataFilePath + folder + _settings.CxDataFileName);
+            Console.WriteLine("Executable Path: {0}", System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location));
+          
+            Console.WriteLine("Configuration Settings:");
+            foreach (PropertyInfo propertyInfo in _settings.GetType().GetProperties())
+            {
+                Console.WriteLine("{0}:{1}", propertyInfo.Name, propertyInfo.GetValue(_settings, null));
+            }
+            Console.WriteLine("-----------------------------------------------------------------------");
+            Console.WriteLine("Command Line Settings:");
+            foreach (PropertyInfo propertyInfo in _token.GetType().GetProperties())
+            {
+                Console.WriteLine("{0}:{1}", propertyInfo.Name, propertyInfo.GetValue(_token, null));
+            }
+            Console.WriteLine("-----------------------------------------------------------------------");
+            Console.WriteLine("");
+
+        }
         public static resultClass mono_command_args(string[] args)
         {
             resultClass token = new resultClass();
@@ -150,6 +178,8 @@ namespace CxAPI_Core
                   v => token.file_path = v },
                 { "file|file_name=", "Override file name in configuration",
                   v => token.file_name = v },
+                { "sf|severity_filter=", "Filter results by Severity",
+                  v => token.severity_filter = v },
                 { "sr|save_result=", "Enable saving of results as XML",
                   v => token.save_result = v },
                 { "srp|save_result_path=", "Override save result path in configuration",
@@ -159,9 +189,9 @@ namespace CxAPI_Core
                 { "p|password=", "The password needed to retreive the token (REST) or session (SOAP)",
                   v => token.credential = v },
                 { "st|start_time=", "Last scan start time",
-                  v => token.start_time = DateTime.Parse(v) },
+                  v => token.start_time = DateTime.Parse(v)},
                 { "et|end_time=", "Last scan end time",
-                  v => token.end_time = DateTime.Parse(v) },
+                  v => token.end_time = DateTime.Parse(v)},
                 //add proxy stuff
                 { "up|use_proxy", "Use web proxy",
                   v => token.use_proxy = true },
@@ -200,11 +230,19 @@ namespace CxAPI_Core
                     token.proxy_url = String.IsNullOrEmpty(token.proxy_url) ? _settings.proxy_url : token.proxy_url;
                     Console.WriteLine("Using proxy {0}", token.proxy_url);
                 }
+
                 token.save_result_filename = String.IsNullOrEmpty(token.save_result_filename) ? _settings.CxResultFileName : token.save_result_filename;
                 token.save_result_path = String.IsNullOrEmpty(token.save_result_path) ? _settings.CxResultFilePath : token.save_result_path;
                 _settings.CxFilePath = string.IsNullOrEmpty(_settings.CxDefaultFilePath) ? _settings.CxFilePath : _settings.CxDefaultFilePath;
                 token.file_name = String.IsNullOrEmpty(token.file_name) ? _settings.CxDefaultFileName : token.file_name;
                 token.file_path = String.IsNullOrEmpty(token.file_path) ? _settings.CxFilePath : token.file_path;
+                token.end_time = (token.end_time == null) ? DateTime.Today : token.end_time;
+                token.start_time = (token.start_time == null) ? DateTime.Today.AddMonths(-1) : token.start_time;
+
+                if (token.debug && token.verbosity > 0)
+                {
+                    debug_configuration(_settings,token);
+                }
             }
 
             // if (String.IsNullOrEmpty(token.file_name) ? _configuration

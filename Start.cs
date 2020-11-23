@@ -15,6 +15,7 @@ namespace CxAPI_Core
             try
             {
                 Console.WriteLine(Configuration.getVersion());
+                Console.WriteLine(Configuration.getdotNet());
                 resultClass token = dsp.dispatch(args);
                 if (token.debug)
                 {

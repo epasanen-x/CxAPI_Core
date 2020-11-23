@@ -21,45 +21,48 @@ namespace CxAPI_Core
 
         public bool fetchResultsbyDate()
         {
-            bool waitFlag = false;
             List<ReportTrace> trace = new List<ReportTrace>();
-            getScanResults scanResults = new getScanResults();
+            bool waitFlag = false;
+          
             getScans scans = new getScans();
-            List<ScanObject> scan = scans.getScan(token);
-            List<Teams> teams = scans.getTeams(token);
-            ConsoleSpinner spinner = new ConsoleSpinner();
-        
+            getProjects projects = new getProjects(token);
+
+            //List<ScanObject> scan = scans.getScan(token);
+            Dictionary<string, Teams> teams = projects.CxTeams;
+            List<ScanObject> scan = projects.filter_by_projects(token);
+            Dictionary<long, ScanStatistics> resultStatistics = projects.CxResultStatistics;
+            getScanResults scanResults = new getScanResults();
+
+            if (scan.Count == 0)
+            {
+                Console.Error.WriteLine("No scans were found, pleas check arguments and retry.");
+                return false;
+            }
 
             foreach (ScanObject s in scan)
             {
-                if ((s.DateAndTime != null) && (s.Status.Id == 7) && (s.DateAndTime.StartedOn > token.start_time) && (s.DateAndTime.StartedOn < token.end_time))
+
+                if (token.save_result.Contains("XML"))
                 {
-                    if ((String.IsNullOrEmpty(token.project_name) || ((!String.IsNullOrEmpty(token.project_name)) && (s.Project.Name.Contains(token.project_name)))))
+                    ReportResult result = scanResults.SetResultRequest(s.Id, "XML", token);
+                    if (result != null)
                     {
-                        if (token.save_result.Contains("XML"))
-                        {
-                            ReportResult result = scanResults.SetResultRequest(s.Id, "XML", token);
-                            if (result != null)
-                            {
-                                trace.Add(new ReportTrace(s.Project.Id, s.Project.Name, scans.getFullName(teams, s.OwningTeamId) ,s.DateAndTime.StartedOn, s.Id, result.ReportId, "XML"));
-                            }
-                        }
-                        if (token.save_result.Contains("PDF"))
-                        {
-                            ReportResult result = scanResults.SetResultRequest(s.Id, "PDF", token);
-                            if (result != null)
-                            {
-                                trace.Add(new ReportTrace(s.Project.Id, s.Project.Name, scans.getFullName(teams, s.OwningTeamId), s.DateAndTime.StartedOn, s.Id, result.ReportId, "PDF"));
-                            }
-                        }
+                        trace.Add(new ReportTrace(s.Project.Id, s.Project.Name, teams[s.OwningTeamId].fullName, s.DateAndTime.StartedOn, s.Id, result.ReportId, "XML"));
+                    }
+                }
+                if (token.save_result.Contains("PDF"))
+                {
+                    ReportResult result = scanResults.SetResultRequest(s.Id, "PDF", token);
+                    if (result != null)
+                    {
+                        trace.Add(new ReportTrace(s.Project.Id, s.Project.Name, teams[s.OwningTeamId].fullName, s.DateAndTime.StartedOn, s.Id, result.ReportId, "PDF"));
                     }
                 }
             }
 
             while (!waitFlag)
             {
-                spinner.Turn();
-                if (token.debug && token.verbosity > 0) { Console.WriteLine("Sleeping 1 second(s)");}
+                if (token.debug && token.verbosity > 0) { Console.WriteLine("Sleeping 1 second(s)"); }
                 Thread.Sleep(1000);
                 waitFlag = true;
                 foreach (ReportTrace rt in trace)
@@ -100,7 +103,7 @@ namespace CxAPI_Core
                         return true;
                     }
                     else if (rt.reportType == "PDF")
-                    { 
+                    {
                         string filename = token.save_result_path + @"\" + rt.projectName + '-' + rt.scanTime.Value.ToString("yyyyMMddhhmmss") + ".pdf";
                         File.WriteAllBytes(filename, token.byte_result);
                         return true;

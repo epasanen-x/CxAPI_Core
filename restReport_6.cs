@@ -63,7 +63,7 @@ namespace CxAPI_Core
             {
                 foreach (ReportResultMaxQueries csv in reportOutputs)
                 {
-                    //   Console.WriteLine("{0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},{12},{13},{14},{15},{16},{17},{18},{19},{20},{21}", csv.ProjectName, csv.TeamName, csv.PresetName, csv.scanId, csv.scanDate, csv.StartNotExploitable, csv.StartConfirmed, csv.StartToVerify, csv.LastOthers, csv.NewHigh, csv.NewMedium, csv.NewLow, csv.DiffHigh, csv.DiffMedium, csv.DiffLow, csv.LastNotExploitable, csv.LastConfirmed, csv.LastToVerify, csv.LastOthers, csv.firstScan, csv.lastScan, csv.ScanCount);
+                    Console.WriteLine("{0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},{12},{13},{14},{15},{16},{17},{18},{19},{20},{21},{22},{23},{24},{25}", csv.Project_Name, csv.Team_Name, csv.Preset_Name, csv.Scan_Date, csv.Project_Id, csv.Scan_Id, csv.Languages, csv.Query_1, csv.Group_1, csv.Severity_1, csv.False_Positive_1, csv.Query_2, csv.Group_2, csv.Severity_2, csv.False_Positive_2, csv.Query_3, csv.Group_3, csv.Severity_3, csv.False_Positive_3, csv.Query_4, csv.Group_4, csv.Severity_4, csv.False_Positive_4, csv.Query_5, csv.Group_5, csv.Severity_5, csv.False_Positive_5);
                 }
             }
             else
@@ -97,9 +97,13 @@ namespace CxAPI_Core
                         report.Preset_Name = scanObject.presetName;
                         report.Languages = getLanguages(scan, scannedStatistics, scanObject.scanId);
                     }
-                    // now get top queries
-                    topQueries.Add(Tuple.Create(scanObject.QueryCount, scanObject.NotExploitableCount,scanObject.Group, scanObject.Severity, scanObject.Query));
+                    if (token.severity_filter.Contains(scanObject.Severity))
+                    {
+                        // now get top queries
+                        topQueries.Add(Tuple.Create(scanObject.QueryCount, scanObject.NotExploitableCount, scanObject.Group, scanObject.Severity, scanObject.Query));
+                    }
                 }
+                
                 topQueries = getTopCount(topQueries);
                 if (topQueries.Count > 0)
                 {
@@ -112,7 +116,7 @@ namespace CxAPI_Core
                 }
                 if (topQueries.Count > 1)
                 {
-                    Tuple<int, int, string, string, string> rank1 = topQueries[0];
+                    Tuple<int, int, string, string, string> rank1 = topQueries[1];
                     report.Query_Count_2 = rank1.Item1;
                     report.False_Positive_2 = rank1.Item2;
                     report.Group_2 = rank1.Item3;
@@ -121,7 +125,7 @@ namespace CxAPI_Core
                 }
                 if (topQueries.Count > 2)
                 {
-                    Tuple<int, int, string, string, string> rank1 = topQueries[0];
+                    Tuple<int, int, string, string, string> rank1 = topQueries[2];
                     report.Query_Count_3 = rank1.Item1;
                     report.False_Positive_3 = rank1.Item2;
                     report.Group_3 = rank1.Item3;
@@ -130,7 +134,7 @@ namespace CxAPI_Core
                 }
                 if (topQueries.Count > 3)
                 {
-                    Tuple<int, int, string, string, string> rank1 = topQueries[0];
+                    Tuple<int, int, string, string, string> rank1 = topQueries[3];
                     report.Query_Count_4 = rank1.Item1;
                     report.False_Positive_4 = rank1.Item2;
                     report.Group_4 = rank1.Item3;
@@ -139,7 +143,7 @@ namespace CxAPI_Core
                 }
                 if (topQueries.Count > 4)
                 {
-                    Tuple<int, int, string, string, string> rank1 = topQueries[0];
+                    Tuple<int, int, string, string, string> rank1 = topQueries[4];
                     report.Query_Count_5 = rank1.Item1;
                     report.False_Positive_5 = rank1.Item2;
                     report.Group_5 = rank1.Item3;
@@ -157,7 +161,7 @@ namespace CxAPI_Core
         {
             ScanStatistics scanStatistics = scannedStatistics[scanId];
             List<string> lang = new List<string>();
-            LanguageStateCollection[] lstates = getScanObject(scans,scanId).ScanState.LanguageStateCollection;
+            LanguageStateCollection[] lstates = getScanObject(scans, scanId).ScanState.LanguageStateCollection;
             foreach (LanguageStateCollection state in lstates)
             {
                 lang.Add(state.LanguageName);
@@ -167,7 +171,7 @@ namespace CxAPI_Core
         private ScanObject getScanObject(List<ScanObject> scans, long scanId)
         {
 
-            foreach(ScanObject scan in scans)
+            foreach (ScanObject scan in scans)
             {
                 if (scan.Id == scanId)
                 {
@@ -180,7 +184,7 @@ namespace CxAPI_Core
         }
         private List<Tuple<int, int, string, string, string>> getTopCount(List<Tuple<int, int, string, string, string>> listQueries)
         {
-            return listQueries.OrderByDescending(x => x.Item1).ToList();         
+            return listQueries.OrderByDescending(x => x.Item1).ToList();
         }
 
         private bool process_ScanResult(XElement result, Dictionary<long, List<ReportResultAll>> last, long projectId, long scanId)

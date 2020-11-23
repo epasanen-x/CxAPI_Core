@@ -60,6 +60,7 @@ namespace CxAPI_Core
         public string proxy_password { get; set; }
         public string proxy_domain { get; set; }
         public string report_name { get; set; }
+        public string severity_filter { get; set; }
 
         List<ProjectObject> projectClass { get; set; }
 
@@ -70,6 +71,7 @@ namespace CxAPI_Core
             max_threads = 5;
             max_scans = 0;
             test = false;
+            severity_filter = "High,Medium,Low,Info";
         }
 
         public void _setresultClass()

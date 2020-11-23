@@ -38,7 +38,7 @@ namespace CxAPI_Core
 
             if (scan.Count == 0)
             {
-                Console.Error.WriteLine("No scans were found, pleas check argumants and retry.");
+                Console.Error.WriteLine("No scans were found, pleas check arguments and retry.");
                 return false;
             }
 
