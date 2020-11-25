@@ -332,7 +332,7 @@ namespace CxAPI_Core
                         waitFlag = false;
                         if (rt.TimeStamp.AddMinutes(2) < DateTime.UtcNow)
                         {
-                            Console.Error.WriteLine("ReportId/ScanId {0)/{1} timeout!", rt.reportId, rt.scanId);
+                            Console.Error.WriteLine("ReportId/ScanId {0}/{1} timeout!", rt.reportId, rt.scanId);
                             rt.isRead = true;
                             continue;
                         }

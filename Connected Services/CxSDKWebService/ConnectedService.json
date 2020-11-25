@@ -1,6 +1,6 @@
 ﻿{
   "ProviderId": "Microsoft.VisualStudio.ConnectedService.Wcf",
-  "Version": "15.0.20628.921",
+  "Version": "15.0.40203.910",
   "ExtendedData": {
     "Uri": "https://cxprivatecloud.checkmarx.net/CxWebInterface/SDK/CxSDKWebService.asmx",
     "Namespace": "CxSDKWebService",
