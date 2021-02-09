@@ -61,6 +61,7 @@ namespace CxAPI_Core
         public string proxy_domain { get; set; }
         public string report_name { get; set; }
         public string severity_filter { get; set; }
+        public string filename_filter { get; set; }
 
         List<ProjectObject> projectClass { get; set; }
 

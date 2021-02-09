@@ -210,6 +210,8 @@ namespace CxAPI_Core
                   v => token.max_threads = Convert.ToInt32(v) },
                 { "ms|max_scans=", "Change the max number of report requests to CxManager",
                   v => token.max_scans = Convert.ToInt32(v) },
+                { "ff|filename_filter=", "Firter results so only filename matches are reported",
+                  v => token.filename_filter = v },
                 { "d|debug", "Output debugging info ",
                   v => token.debug = true },
                 { "T|test", "Wait at end of program ",
